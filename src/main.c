@@ -3,9 +3,9 @@
 // ============================================================
 // CONSTANTS
 // ============================================================
-#define SETTINGS_KEY      1
+#define SETTINGS_KEY      2    // bumped from 1: new struct, old settings incompatible
 #define DEFAULT_STEP_GOAL 10000
-#define RING_GAP          2    // px gap between outer ring inner edge and tick radials
+#define RING_GAP          2    // px gap between outer ring and tick radials
 #define RING_THICK        6    // outer ring thickness in px
 
 // OverlayMode values
@@ -14,37 +14,54 @@
 #define OVERLAY_SHAKE  2
 
 // ============================================================
-// SETTINGS
+// SETTINGS  (v2.1 — full 12-color + ring toggle)
 // ============================================================
+// v2.1 color model (color watches) — all 12 slots fully independent:
+//   Text  (2): TimeTextColor, DateTextColor
+//   Lit   (4): LitHourColor, LitMinuteColor, LitBatteryColor, LitStepsColor
+//   Unlit (4): DimHourColor, DimMinuteColor, DimBatteryColor, DimStepsColor
+//   Base  (2): BackgroundColor, OverlayBgColor
+// Config page cascades: top-level swatch sets all children; mid-level sets its group.
 typedef struct {
-  GColor BackgroundColor;  // canvas background
-  GColor TimeTextColor;    // time digits
-  GColor DateTextColor;    // day name + date string
-  GColor LitHourColor;     // filled hour ticks
-  GColor LitMinuteColor;   // filled minute ticks
-  GColor LitBatteryColor;  // battery bar fill
-  GColor LitStepsColor;    // steps bar fill
-  GColor DimTickColor;     // empty tick tracks
-  GColor DimRingColor;     // empty outer ring
+  // Text (2)
+  GColor TimeTextColor;
+  GColor DateTextColor;
+  // Lit elements (4)
+  GColor LitHourColor;
+  GColor LitMinuteColor;
+  GColor LitBatteryColor;
+  GColor LitStepsColor;
+  // Unlit elements — NEW in v2.1: per-element dim colors (4)
+  GColor DimHourColor;     // empty hour tick tracks
+  GColor DimMinuteColor;   // empty minute tick tracks
+  GColor DimBatteryColor;  // empty battery ring track
+  GColor DimStepsColor;    // empty steps ring track
+  // Base (2)
+  GColor BackgroundColor;
+  GColor OverlayBgColor;   // center overlay bg (usually = BackgroundColor)
+  // Non-color settings
   int    StepGoal;
   int    OverlayMode;      // OVERLAY_ON / OVERLAY_OFF / OVERLAY_SHAKE
   bool   InvertBW;         // B&W only: swap black/white at draw time
+  bool   ShowRing;         // show/hide outer battery+steps ring
 } RadiumSettings;
 
 static RadiumSettings s_settings;
 
 static void prv_default_settings(void) {
   s_settings.BackgroundColor = GColorBlack;
+  s_settings.OverlayBgColor  = GColorBlack;
 #if defined(PBL_COLOR)
-  // Radium green defaults
   s_settings.TimeTextColor   = GColorWhite;
   s_settings.DateTextColor   = GColorWhite;
-  s_settings.LitHourColor    = GColorMintGreen;   // soft mint-white, luminous
+  s_settings.LitHourColor    = GColorMintGreen;
   s_settings.LitMinuteColor  = GColorMintGreen;
   s_settings.LitBatteryColor = GColorMintGreen;
   s_settings.LitStepsColor   = GColorMintGreen;
-  s_settings.DimTickColor    = GColorDarkGray;
-  s_settings.DimRingColor    = GColorDarkGray;
+  s_settings.DimHourColor    = GColorDarkGray;
+  s_settings.DimMinuteColor  = GColorDarkGray;
+  s_settings.DimBatteryColor = GColorDarkGray;
+  s_settings.DimStepsColor   = GColorDarkGray;
 #else
   s_settings.TimeTextColor   = GColorWhite;
   s_settings.DateTextColor   = GColorWhite;
@@ -52,12 +69,15 @@ static void prv_default_settings(void) {
   s_settings.LitMinuteColor  = GColorWhite;
   s_settings.LitBatteryColor = GColorWhite;
   s_settings.LitStepsColor   = GColorWhite;
-  s_settings.DimTickColor    = GColorDarkGray;
-  s_settings.DimRingColor    = GColorDarkGray;
+  s_settings.DimHourColor    = GColorDarkGray;
+  s_settings.DimMinuteColor  = GColorDarkGray;
+  s_settings.DimBatteryColor = GColorDarkGray;
+  s_settings.DimStepsColor   = GColorDarkGray;
 #endif
   s_settings.StepGoal    = DEFAULT_STEP_GOAL;
   s_settings.OverlayMode = OVERLAY_SHAKE;
   s_settings.InvertBW    = false;
+  s_settings.ShowRing    = true;
 }
 
 static void prv_save_settings(void) {
@@ -79,13 +99,12 @@ static int  s_hour    = 0;
 static int  s_minute  = 0;
 static int  s_battery = 100;
 static int  s_steps   = 0;
-static bool s_show_overlay = true;  // runtime state; synced from OverlayMode on load
+static bool s_show_overlay = true;
 
 static char s_time_buffer[8];
 static char s_day_buffer[12];
 static char s_date_buffer[10];
 
-// Pre-allocated GPath for rect wedge drawing (avoids per-frame allocation)
 static GPoint    s_tri_pts[3];
 static GPathInfo s_tri_info = { .num_points = 3, .points = s_tri_pts };
 static GPath    *s_tri_path = NULL;
@@ -108,13 +127,10 @@ static const char *get_month_abbr(int mon) {
   return (mon >= 0 && mon < 12) ? months[mon] : "";
 }
 
-// Returns true when the time/date overlay should be drawn
 static bool prv_overlay_visible(void) {
   return (s_settings.OverlayMode != OVERLAY_OFF) && s_show_overlay;
 }
 
-// Draw a filled wedge triangle from center outward between two trig angles.
-// Radius is large enough to exit the screen; the layer clips the rest.
 static void draw_wedge(GContext *ctx, int cx, int cy, int radius,
                        int32_t a1, int32_t a2) {
   s_tri_pts[0] = GPoint(cx, cy);
@@ -146,56 +162,60 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   // B&W: InvertBW swaps black/white. All color vars resolved once here.
   // ----------------------------------------------------------
 #if defined(PBL_BW)
-  GColor bw_lit   = s_settings.InvertBW ? GColorBlack     : GColorWhite;
-  GColor bw_dim   = s_settings.InvertBW ? GColorLightGray : GColorDarkGray;
-  GColor col_bg   = s_settings.InvertBW ? GColorWhite     : GColorBlack;
-  GColor col_fg   = s_settings.InvertBW ? GColorBlack     : GColorWhite;
-  GColor col_dfg  = col_fg;   // date text on B&W: same as time text
-  GColor col_tick = bw_lit;
-  GColor col_hour = bw_lit;
-  GColor col_batt = bw_lit;
-  GColor col_step = bw_lit;
-  GColor col_empty = bw_dim;
-  GColor col_ring  = bw_dim;
+  GColor bw_lit    = s_settings.InvertBW ? GColorBlack     : GColorWhite;
+  GColor bw_dim    = s_settings.InvertBW ? GColorLightGray : GColorDarkGray;
+  GColor col_bg    = s_settings.InvertBW ? GColorWhite     : GColorBlack;
+  GColor col_fg    = s_settings.InvertBW ? GColorBlack     : GColorWhite;
+  GColor col_dfg   = col_fg;
+  GColor col_min   = bw_lit;
+  GColor col_hour  = bw_lit;
+  GColor col_batt  = bw_lit;
+  GColor col_step  = bw_lit;
+  GColor col_dmin  = bw_dim;
+  GColor col_dhour = bw_dim;
+  GColor col_dbatt = bw_dim;
+  GColor col_dstep = bw_dim;
+  GColor col_obg   = col_bg;
 #else
-  GColor col_bg   = s_settings.BackgroundColor;
-  GColor col_fg   = s_settings.TimeTextColor;
-  GColor col_dfg  = s_settings.DateTextColor;
-  GColor col_tick = s_settings.LitMinuteColor;
-  GColor col_hour = s_settings.LitHourColor;
-  GColor col_batt = s_settings.LitBatteryColor;
-  GColor col_step = s_settings.LitStepsColor;
-  GColor col_empty = s_settings.DimTickColor;
-  GColor col_ring  = s_settings.DimRingColor;
+  GColor col_bg    = s_settings.BackgroundColor;
+  GColor col_fg    = s_settings.TimeTextColor;
+  GColor col_dfg   = s_settings.DateTextColor;
+  GColor col_min   = s_settings.LitMinuteColor;
+  GColor col_hour  = s_settings.LitHourColor;
+  GColor col_batt  = s_settings.LitBatteryColor;
+  GColor col_step  = s_settings.LitStepsColor;
+  GColor col_dmin  = s_settings.DimMinuteColor;
+  GColor col_dhour = s_settings.DimHourColor;
+  GColor col_dbatt = s_settings.DimBatteryColor;
+  GColor col_dstep = s_settings.DimStepsColor;
+  GColor col_obg   = s_settings.OverlayBgColor;
 #endif
 
   // ----------------------------------------------------------
   // LAYOUT
+  // When ring is hidden: ticks expand to screen edge (pure starburst).
+  // When ring is shown: inset by ring + gap.
   // ----------------------------------------------------------
-  int inset      = RING_THICK + RING_GAP;
+  bool show_ring = s_settings.ShowRing;
+  int inset = show_ring ? (RING_THICK + RING_GAP) : 0;
   GRect tick_rect  = GRect(inset, inset, w - 2*inset, h - 2*inset);
   int inner_short  = (tick_rect.size.w < tick_rect.size.h)
                      ? tick_rect.size.w : tick_rect.size.h;
 
-  // Tick ring thickness -- controls inner hole size on round screens.
-  // Art mode (OVERLAY_OFF): fill ring completely (pure starburst).
-  // Round: tuned per screen size. Rect: original ratio.
   int tick_thick;
   if (s_settings.OverlayMode == OVERLAY_OFF) {
     tick_thick = inner_short;
   } else {
 #if defined(PBL_ROUND)
-    tick_thick = (h > 180) ? inner_short * 36 / 164   // Gabbro: 128px hole = 64px radius (matches Emery overlay)
-                           : inner_short * 18 / 164;  // Chalk:  116px hole = 58px radius (matches low-res rect overlay)
+    tick_thick = (h > 180) ? inner_short * 36 / 164
+                           : inner_short * 18 / 164;
 #else
     tick_thick = inner_short * 19 / 164;
 #endif
   }
 
-  // Wedge radius: oversized; layer clips to screen bounds
   int radius = ((w > h) ? w : h) - RING_THICK - 1;
 
-  // Stroke has no effect on gpath_draw_filled; set 0 to be explicit
   graphics_context_set_stroke_width(ctx, 0);
 
   // ----------------------------------------------------------
@@ -208,21 +228,18 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   // TICK MARKS
   // ----------------------------------------------------------
   if (!is_round) {
-    // RECT: wedge triangles from center, clipped by layer.
-    // Minutes: right half  3..178 deg, 12 groups of 5 ticks (10 deg/group).
-    // Hours:   left  half 183..357 deg, 12 hour blocks (10 deg each).
-    // Color: 1deg gap separators cut after each group.
-    // B&W:   solid blocks only (narrow gaps look noisy due to dithering).
+    // RECT path
 
     int filled_groups = s_minute / 5;
     int partial_min   = s_minute % 5;
 
-    // -- Minutes: empty groups --
-    graphics_context_set_fill_color(ctx, col_empty);
-    graphics_context_set_stroke_color(ctx, col_empty);
+    // -- Minutes empty --
+    // Minute groups: 9 deg block + 6 deg gap = 15 deg pitch, centering the group 5/6 gap on 90 deg.
+    graphics_context_set_fill_color(ctx, col_dmin);
+    graphics_context_set_stroke_color(ctx, col_dmin);
     for (int g = filled_groups + (partial_min > 0 ? 1 : 0); g < 12; g++) {
       int a = 3 + 15*g;
-      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 10));
+      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
     }
 #if defined(PBL_COLOR)
     graphics_context_set_fill_color(ctx, col_bg);
@@ -236,12 +253,12 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 #endif
 
-    // -- Minutes: filled groups --
-    graphics_context_set_fill_color(ctx, col_tick);
-    graphics_context_set_stroke_color(ctx, col_tick);
+    // -- Minutes filled --
+    graphics_context_set_fill_color(ctx, col_min);
+    graphics_context_set_stroke_color(ctx, col_min);
     for (int g = 0; g < filled_groups; g++) {
       int a = 3 + 15*g;
-      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 10));
+      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
     }
 #if defined(PBL_COLOR)
     graphics_context_set_fill_color(ctx, col_bg);
@@ -255,15 +272,13 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 #endif
 
-    // -- Minutes: partial group --
+    // -- Minutes partial group --
     if (partial_min > 0) {
       int a = 3 + 15*filled_groups;
-      // Empty base block
-      graphics_context_set_fill_color(ctx, col_empty);
-      graphics_context_set_stroke_color(ctx, col_empty);
-      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 10));
+      graphics_context_set_fill_color(ctx, col_dmin);
+      graphics_context_set_stroke_color(ctx, col_dmin);
+      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
 #if defined(PBL_COLOR)
-      // Gap cuts
       graphics_context_set_fill_color(ctx, col_bg);
       graphics_context_set_stroke_color(ctx, col_bg);
       for (int i = 0; i < 4; i++) {
@@ -271,9 +286,8 @@ static void draw_layer(Layer *layer, GContext *ctx) {
         draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(gap), DEG_TO_TRIGANGLE(gap + 1));
       }
 #endif
-      // Filled ticks overdraw: 1deg color, 2deg B&W
-      graphics_context_set_fill_color(ctx, col_tick);
-      graphics_context_set_stroke_color(ctx, col_tick);
+      graphics_context_set_fill_color(ctx, col_min);
+      graphics_context_set_stroke_color(ctx, col_min);
       for (int i = 0; i < partial_min; i++) {
         int ta = a + 2*i;
 #if defined(PBL_BW)
@@ -285,35 +299,32 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 
     // -- Hours --
-    // 12h mode: each slot = 10deg solid.
-    // 24h mode: each slot split into two 4deg segments with 2deg gap.
-    //   slot = hour/2, first seg = even hours, second seg = odd hours.
     bool is_24h = clock_is_24h_style();
-    // 24h: slot = pair of hours (0-11), half = which within pair (0=first, 1=second)
-    // 12h: slot = hour (0-11)
-    int filled_slots = is_24h ? (s_hour / 2) : (s_hour % 12);
-    int filled_half  = s_hour % 2;  // 24h only: 0=first half only, 1=both halves
+    int filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
+    int filled_half  = s_hour % 2;
 
-    // Empty slot bases (all 12 slots, full 10deg each)
-    graphics_context_set_fill_color(ctx, col_empty);
-    graphics_context_set_stroke_color(ctx, col_empty);
+    // Empty slot bases
+    // Hour ticks are 9 deg wide (gap 6 deg) — same 15 deg pitch as before but redistributed
+    // so the inter-slot gap at 9 o'clock is centered exactly on 270 deg, and both edge
+    // gaps at 6 and 12 o'clock are equal (3 deg each). Pitch unchanged; visually near-identical.
+    graphics_context_set_fill_color(ctx, col_dhour);
+    graphics_context_set_stroke_color(ctx, col_dhour);
     for (int h2 = 0; h2 < 12; h2++) {
       int a = 183 + 15*h2;
-      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 10));
+      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
     }
 #if defined(PBL_COLOR)
-    // Slot separators: 1deg gap after each block (color only -- too noisy on B&W)
     graphics_context_set_fill_color(ctx, col_bg);
     graphics_context_set_stroke_color(ctx, col_bg);
     for (int h2 = 0; h2 < 12; h2++) {
       int a = 183 + 15*h2;
-      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 10), DEG_TO_TRIGANGLE(a + 11));
+      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 9), DEG_TO_TRIGANGLE(a + 10));
     }
-    // 24h: 2deg internal mid-slot gap (color only)
     if (is_24h) {
+      // 24h divider: 3 deg cut (perfect thirds: a to a+3, gap a+3 to a+6, a+6 to a+9)
       for (int h2 = 0; h2 < 12; h2++) {
-        int a = 183 + 15*h2 + 4;
-        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 2));
+        int a = 183 + 15*h2 + 3;
+        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
       }
     }
 #endif
@@ -324,53 +335,47 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     if (!is_24h) {
       for (int h2 = 0; h2 < filled_slots; h2++) {
         int a = 183 + 15*h2;
-        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 10));
+        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
       }
     } else {
-      // Complete slots: both halves filled
       for (int h2 = 0; h2 < filled_slots; h2++) {
         int a = 183 + 15*h2;
-        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a),     DEG_TO_TRIGANGLE(a + 4));
-        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 10));
+        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a),     DEG_TO_TRIGANGLE(a + 3));
+        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
       }
-      // Current partial slot
       if (filled_slots < 12) {
         int a = 183 + 15*filled_slots;
-        // First half always lit in current slot (we're at least at the even hour)
-        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 4));
-        // Second half lit only on odd hour
+        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
         if (filled_half == 1) {
-          draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 10));
+          draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
         }
       }
     }
 #if defined(PBL_COLOR)
-    // Re-cut separators over filled blocks to restore gaps (color only)
+    // Re-cut separators over filled blocks
     graphics_context_set_fill_color(ctx, col_bg);
     graphics_context_set_stroke_color(ctx, col_bg);
     for (int h2 = 0; h2 <= filled_slots && h2 < 12; h2++) {
       int a = 183 + 15*h2;
-      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 10), DEG_TO_TRIGANGLE(a + 11));
+      draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 9), DEG_TO_TRIGANGLE(a + 10));
     }
     if (is_24h) {
       for (int h2 = 0; h2 <= filled_slots && h2 < 12; h2++) {
-        int a = 183 + 15*h2 + 4;
-        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 2));
+        int a = 183 + 15*h2 + 3;
+        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
       }
     }
 #endif
 
   } else {
-    // ROUND: fill_radial annulus. Inner hole = natural space inside tick_thick.
-    // Minutes: 60 ticks of 1deg each, 1deg gaps, extra 5deg gap every 5th.
-    // Hours:   12 blocks of 9deg each.
-    graphics_context_set_fill_color(ctx, col_empty);
+    // ROUND path
+    graphics_context_set_fill_color(ctx, col_dmin);
     for (int i = 0; i < 60; i++) {
       int a = 3 + 2*i + 5*(i/5);
       graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                            DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 1));
     }
-    graphics_context_set_fill_color(ctx, col_tick);
+    graphics_context_set_fill_color(ctx, col_min);
     for (int i = 0; i < s_minute; i++) {
       int a = 3 + 2*i + 5*(i/5);
       graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
@@ -378,25 +383,24 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
     {
       bool is_24h = clock_is_24h_style();
-      int filled_slots = is_24h ? (s_hour / 2) : (s_hour % 12);
+      int filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
       int filled_half  = s_hour % 2;
-      // Empty slot bases (9deg each, 1deg natural gap to next slot at 15deg spacing)
-      graphics_context_set_fill_color(ctx, col_empty);
+
+      graphics_context_set_fill_color(ctx, col_dhour);
       for (int h2 = 0; h2 < 12; h2++) {
         int a = 183 + 15*h2;
         graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                              DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
       }
-      // 24h: cut 2deg mid-slot gap in empty bases (background color)
       if (is_24h) {
+        // 24h divider: 3 deg cut (perfect thirds of 9 deg tick)
         graphics_context_set_fill_color(ctx, col_bg);
         for (int h2 = 0; h2 < 12; h2++) {
-          int a = 183 + 15*h2 + 4;
+          int a = 183 + 15*h2 + 3;
           graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
-                               DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 2));
+                               DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
         }
       }
-      // Filled hours
       graphics_context_set_fill_color(ctx, col_hour);
       if (!is_24h) {
         for (int h2 = 0; h2 < filled_slots; h2++) {
@@ -405,30 +409,28 @@ static void draw_layer(Layer *layer, GContext *ctx) {
                                DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
         }
       } else {
-        // Complete slots: both halves filled
         for (int h2 = 0; h2 < filled_slots; h2++) {
           int a = 183 + 15*h2;
           graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
-                               DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 4));
+                               DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
           graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                                DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
         }
-        // Current partial slot
         if (filled_slots < 12) {
           int a = 183 + 15*filled_slots;
           graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
-                               DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 4));
+                               DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
           if (filled_half == 1) {
             graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                                  DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
           }
         }
-        // Re-cut mid-slot gaps over filled blocks
+        // Re-cut 24h dividers over filled slots
         graphics_context_set_fill_color(ctx, col_bg);
         for (int h2 = 0; h2 <= filled_slots && h2 < 12; h2++) {
-          int a = 183 + 15*h2 + 4;
+          int a = 183 + 15*h2 + 3;
           graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
-                               DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 2));
+                               DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
         }
       }
     }
@@ -436,24 +438,19 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   // ----------------------------------------------------------
   // CENTER OVERLAY CIRCLE (rect only)
-  // Covers wedge tips to create a clean center area for text.
-  // On round: the inner hole of the tick annulus serves this purpose naturally.
-  // Hidden when overlay is off (art mode or shake-toggled off).
   // ----------------------------------------------------------
-  if (!is_round && prv_overlay_visible()) {
-    // Fixed pixel radius: covers LECO_36 time + GOTHIC_18 day/date block (~82px tall, ~64px wide)
-    // Emery (200px) gets a touch more room; all other rect platforms share the base size
+  if (prv_overlay_visible()) {
     int overlay_r = (w >= 200) ? 64 : 58;
-    graphics_context_set_fill_color(ctx, col_bg);
+    graphics_context_set_fill_color(ctx, col_obg);
     graphics_fill_circle(ctx, GPoint(cx, cy), overlay_r);
   }
 
   // ----------------------------------------------------------
-  // INNER GAP STRIP (rect only)
-  // Background-colored border separating tick radials from outer ring.
+  // INNER GAP STRIP (rect only) — separates ticks from outer ring
+  // Skipped when ring is hidden (inset is 0, no ring to separate from)
   // ----------------------------------------------------------
 #if !defined(PBL_ROUND)
-  {
+  if (show_ring) {
     int strip = RING_THICK + RING_GAP;
     graphics_context_set_fill_color(ctx, col_bg);
     graphics_fill_rect(ctx, GRect(0,         0,         w,     strip), 0, GCornerNone);
@@ -464,131 +461,126 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 #endif
 
   // ----------------------------------------------------------
-  // OUTER RING: battery (right half) + steps (left half)
-  // 3deg gap at top/bottom center aligns with tick layout.
-  // Round: radial arcs flush to screen edge.
-  // Rect:  thin filled rects along each edge.
+  // OUTER RING: battery (right) + steps (left)
+  // Skipped entirely when ShowRing is false.
   // ----------------------------------------------------------
-  int step_pct = (s_settings.StepGoal > 0)
-    ? (s_steps * 100) / s_settings.StepGoal : 0;
-  if (step_pct > 100) step_pct = 100;
+  if (show_ring) {
+    int step_pct = (s_settings.StepGoal > 0)
+      ? (s_steps * 100) / s_settings.StepGoal : 0;
+    if (step_pct > 100) step_pct = 100;
 
-  if (is_round) {
-    // Empty tracks
-    graphics_context_set_fill_color(ctx, col_ring);
-    graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, RING_THICK,
-                         DEG_TO_TRIGANGLE(3),   DEG_TO_TRIGANGLE(177));
-    graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, RING_THICK,
-                         DEG_TO_TRIGANGLE(183), DEG_TO_TRIGANGLE(357));
-    // Battery fill: right half, anchors at 177deg (6 o'clock), fills toward 3deg (12 o'clock)
-    if (s_battery > 0) {
-      graphics_context_set_fill_color(ctx, col_batt);
+    if (is_round) {
+      // Empty tracks
+      graphics_context_set_fill_color(ctx, col_dbatt);
       graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, RING_THICK,
-                           DEG_TO_TRIGANGLE(177 - 174 * s_battery / 100),
-                           DEG_TO_TRIGANGLE(177));
-    }
-    // Steps fill: left half, anchors at 183deg (6 o'clock), fills toward 357deg (12 o'clock)
-    if (step_pct > 0) {
-      graphics_context_set_fill_color(ctx, col_step);
+                           DEG_TO_TRIGANGLE(3),   DEG_TO_TRIGANGLE(177));
+      graphics_context_set_fill_color(ctx, col_dstep);
       graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, RING_THICK,
-                           DEG_TO_TRIGANGLE(183),
-                           DEG_TO_TRIGANGLE(183 + 174 * step_pct / 100));
-    }
-  } else {
-    // Rect: right half = battery, left half = steps.
-    // Segment order: bottom-center -> edge -> top-center (clockwise).
-    int t      = RING_THICK;
-    int gap    = 3;         // px gap at center top/bottom (matches 3deg tick gap)
-    int half_w = cx - gap;  // horizontal segment length per half
-    int total  = half_w + h + half_w;
-
-    // Clear edge strips (wedge tips may have reached here)
-    graphics_context_set_fill_color(ctx, col_bg);
-    graphics_fill_rect(ctx, GRect(0,   0,   w, t), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(0,   h-t, w, t), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(0,   0,   t, h), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(w-t, 0,   t, h), 0, GCornerNone);
-
-    // Battery empty track (right half)
-    graphics_context_set_fill_color(ctx, col_ring);
-    graphics_fill_rect(ctx, GRect(cx+gap, 0,   half_w, t), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(w-t,    0,   t,      h), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(cx+gap, h-t, half_w, t), 0, GCornerNone);
-
-    // Battery fill: anchors bottom-right, fills counter-clockwise
-    {
-      int filled = total * s_battery / 100;
-      graphics_context_set_fill_color(ctx, col_batt);
-      if (filled > 0) {
-        int seg = (filled < half_w) ? filled : half_w;
-        graphics_fill_rect(ctx, GRect(cx+gap, h-t, seg, t), 0, GCornerNone);
-        filled -= seg;
+                           DEG_TO_TRIGANGLE(183), DEG_TO_TRIGANGLE(357));
+      // Battery fill
+      if (s_battery > 0) {
+        graphics_context_set_fill_color(ctx, col_batt);
+        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, RING_THICK,
+                             DEG_TO_TRIGANGLE(177 - 174 * s_battery / 100),
+                             DEG_TO_TRIGANGLE(177));
       }
-      if (filled > 0) {
-        int seg = (filled < h) ? filled : h;
-        graphics_fill_rect(ctx, GRect(w-t, h-seg, t, seg), 0, GCornerNone);
-        filled -= seg;
+      // Steps fill
+      if (step_pct > 0) {
+        graphics_context_set_fill_color(ctx, col_step);
+        graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, RING_THICK,
+                             DEG_TO_TRIGANGLE(183),
+                             DEG_TO_TRIGANGLE(183 + 174 * step_pct / 100));
       }
-      if (filled > 0) {
-        int seg = (filled < half_w) ? filled : half_w;
-        graphics_fill_rect(ctx, GRect(cx+gap+half_w-seg, 0, seg, t), 0, GCornerNone);
-      }
-    }
+    } else {
+      // Rect ring
+      int t      = RING_THICK;
+      int gap    = 5;
+      int half_w = cx - gap;
+      int total  = half_w + h + half_w;
 
-    // Steps empty track (left half)
-    graphics_context_set_fill_color(ctx, col_ring);
-    graphics_fill_rect(ctx, GRect(0,   0,   half_w, t), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(0,   0,   t,      h), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(0,   h-t, half_w, t), 0, GCornerNone);
+      // Clear edge strips
+      graphics_context_set_fill_color(ctx, col_bg);
+      graphics_fill_rect(ctx, GRect(0,   0,   w, t), 0, GCornerNone);
+      graphics_fill_rect(ctx, GRect(0,   h-t, w, t), 0, GCornerNone);
+      graphics_fill_rect(ctx, GRect(0,   0,   t, h), 0, GCornerNone);
+      graphics_fill_rect(ctx, GRect(w-t, 0,   t, h), 0, GCornerNone);
 
-    // Steps fill: anchors bottom-left, fills counter-clockwise
-    if (step_pct > 0) {
-      int filled = total * step_pct / 100;
-      graphics_context_set_fill_color(ctx, col_step);
-      if (filled > 0) {
-        int seg = (filled < half_w) ? filled : half_w;
-        graphics_fill_rect(ctx, GRect(cx-gap-seg, h-t, seg, t), 0, GCornerNone);
-        filled -= seg;
+      // Battery empty track (right half)
+      graphics_context_set_fill_color(ctx, col_dbatt);
+      graphics_fill_rect(ctx, GRect(cx+gap, 0,   half_w, t), 0, GCornerNone);
+      graphics_fill_rect(ctx, GRect(w-t,    0,   t,      h), 0, GCornerNone);
+      graphics_fill_rect(ctx, GRect(cx+gap, h-t, half_w, t), 0, GCornerNone);
+
+      // Battery fill
+      {
+        int filled = total * s_battery / 100;
+        graphics_context_set_fill_color(ctx, col_batt);
+        if (filled > 0) {
+          int seg = (filled < half_w) ? filled : half_w;
+          graphics_fill_rect(ctx, GRect(cx+gap+half_w-seg, h-t, seg, t), 0, GCornerNone);
+          filled -= seg;
+        }
+        if (filled > 0) {
+          int seg = (filled < h) ? filled : h;
+          graphics_fill_rect(ctx, GRect(w-t, h-seg, t, seg), 0, GCornerNone);
+          filled -= seg;
+        }
+        if (filled > 0) {
+          int seg = (filled < half_w) ? filled : half_w;
+          graphics_fill_rect(ctx, GRect(cx+gap+half_w-seg, 0, seg, t), 0, GCornerNone);
+        }
       }
-      if (filled > 0) {
-        int seg = (filled < h) ? filled : h;
-        graphics_fill_rect(ctx, GRect(0, h-seg, t, seg), 0, GCornerNone);
-        filled -= seg;
-      }
-      if (filled > 0) {
-        int seg = (filled < half_w) ? filled : half_w;
-        graphics_fill_rect(ctx, GRect(0, 0, seg, t), 0, GCornerNone);
+
+      // Steps empty track (left half)
+      graphics_context_set_fill_color(ctx, col_dstep);
+      graphics_fill_rect(ctx, GRect(0,   0,   half_w, t), 0, GCornerNone);
+      graphics_fill_rect(ctx, GRect(0,   0,   t,      h), 0, GCornerNone);
+      graphics_fill_rect(ctx, GRect(0,   h-t, half_w, t), 0, GCornerNone);
+
+      // Steps fill
+      if (step_pct > 0) {
+        int filled = total * step_pct / 100;
+        graphics_context_set_fill_color(ctx, col_step);
+        if (filled > 0) {
+          int seg = (filled < half_w) ? filled : half_w;
+          graphics_fill_rect(ctx, GRect(cx-gap-seg, h-t, seg, t), 0, GCornerNone);
+          filled -= seg;
+        }
+        if (filled > 0) {
+          int seg = (filled < h) ? filled : h;
+          graphics_fill_rect(ctx, GRect(0, h-seg, t, seg), 0, GCornerNone);
+          filled -= seg;
+        }
+        if (filled > 0) {
+          int seg = (filled < half_w) ? filled : half_w;
+          graphics_fill_rect(ctx, GRect(0, 0, seg, t), 0, GCornerNone);
+        }
       }
     }
   }
 
   // ----------------------------------------------------------
   // TEXT OVERLAY: DAY / TIME / DATE
-  // Shown when prv_overlay_visible() -- i.e. not art mode, not shaken off.
-  // Vertically centered as a single block.
   // ----------------------------------------------------------
   if (prv_overlay_visible()) {
-    int time_h  = 40;  // LECO_36_BOLD_NUMBERS approximate cap height
-    int small_h = 18;  // GOTHIC_18 approximate cap height
-    int spacing = 3;   // equal visual margin above/below time
+    int time_h  = 40;
+    int small_h = 18;
+    int spacing = 3;
     int block_h = small_h + spacing + time_h + spacing + small_h;
-    int top_y   = cy - block_h / 2;
+    int top_y   = cy - block_h / 2 - 3;  // nudge up: LECO font has more bottom padding than top
 
-    // Day name (dim/date color)
     graphics_context_set_text_color(ctx, col_dfg);
     graphics_draw_text(ctx, s_day_buffer,
       fonts_get_system_font(FONT_KEY_GOTHIC_18),
       GRect(0, top_y, w, small_h + 2),
       GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
-    // Time (large, primary text color)
     graphics_context_set_text_color(ctx, col_fg);
     graphics_draw_text(ctx, s_time_buffer,
       fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS),
       GRect(0, top_y + small_h + spacing, w, time_h + 4),
       GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
-    // Date (dim/date color)
     graphics_context_set_text_color(ctx, col_dfg);
     graphics_draw_text(ctx, s_date_buffer,
       fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD),
@@ -601,10 +593,9 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 // EVENT HANDLERS
 // ============================================================
 static void tick_handler(struct tm *t, TimeUnits units_changed) {
-  // s_hour: 0-23 raw; draw code converts to 12h slots or 24h split segments
   s_hour   = t->tm_hour;
   s_minute = t->tm_min;
-  int disp_hour = clock_is_24h_style() ? t->tm_hour : (t->tm_hour % 12);
+  int disp_hour = clock_is_24h_style() ? t->tm_hour : ((t->tm_hour % 12) ?: 12);
   snprintf(s_time_buffer, sizeof(s_time_buffer), "%02d:%02d", disp_hour, t->tm_min);
   snprintf(s_day_buffer,  sizeof(s_day_buffer),  "%s", get_day_name(t->tm_wday));
   snprintf(s_date_buffer, sizeof(s_date_buffer), "%s %02d",
@@ -633,12 +624,12 @@ static void health_handler(HealthEventType event, void *context) {
 
 static void inbox_received(DictionaryIterator *iter, void *context) {
   Tuple *t;
-  t = dict_find(iter, MESSAGE_KEY_BackgroundColor);
-  if (t) s_settings.BackgroundColor  = GColorFromHEX(t->value->int32);
+  // Text colors
   t = dict_find(iter, MESSAGE_KEY_TimeTextColor);
   if (t) s_settings.TimeTextColor    = GColorFromHEX(t->value->int32);
   t = dict_find(iter, MESSAGE_KEY_DateTextColor);
   if (t) s_settings.DateTextColor    = GColorFromHEX(t->value->int32);
+  // Lit colors
   t = dict_find(iter, MESSAGE_KEY_LitHourColor);
   if (t) s_settings.LitHourColor     = GColorFromHEX(t->value->int32);
   t = dict_find(iter, MESSAGE_KEY_LitMinuteColor);
@@ -647,10 +638,21 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
   if (t) s_settings.LitBatteryColor  = GColorFromHEX(t->value->int32);
   t = dict_find(iter, MESSAGE_KEY_LitStepsColor);
   if (t) s_settings.LitStepsColor    = GColorFromHEX(t->value->int32);
-  t = dict_find(iter, MESSAGE_KEY_DimTickColor);
-  if (t) s_settings.DimTickColor     = GColorFromHEX(t->value->int32);
-  t = dict_find(iter, MESSAGE_KEY_DimRingColor);
-  if (t) s_settings.DimRingColor     = GColorFromHEX(t->value->int32);
+  // Dim colors (new in v2.1)
+  t = dict_find(iter, MESSAGE_KEY_DimHourColor);
+  if (t) s_settings.DimHourColor     = GColorFromHEX(t->value->int32);
+  t = dict_find(iter, MESSAGE_KEY_DimMinuteColor);
+  if (t) s_settings.DimMinuteColor   = GColorFromHEX(t->value->int32);
+  t = dict_find(iter, MESSAGE_KEY_DimBatteryColor);
+  if (t) s_settings.DimBatteryColor  = GColorFromHEX(t->value->int32);
+  t = dict_find(iter, MESSAGE_KEY_DimStepsColor);
+  if (t) s_settings.DimStepsColor    = GColorFromHEX(t->value->int32);
+  // Base colors
+  t = dict_find(iter, MESSAGE_KEY_BackgroundColor);
+  if (t) s_settings.BackgroundColor  = GColorFromHEX(t->value->int32);
+  t = dict_find(iter, MESSAGE_KEY_OverlayBgColor);
+  if (t) s_settings.OverlayBgColor   = GColorFromHEX(t->value->int32);
+  // Non-color settings
   t = dict_find(iter, MESSAGE_KEY_StepGoal);
   if (t) s_settings.StepGoal = (int)t->value->int32;
   t = dict_find(iter, MESSAGE_KEY_OverlayMode);
@@ -660,6 +662,8 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
   }
   t = dict_find(iter, MESSAGE_KEY_InvertBW);
   if (t) s_settings.InvertBW = (t->value->int32 == 1);
+  t = dict_find(iter, MESSAGE_KEY_ShowRing);
+  if (t) s_settings.ShowRing = (t->value->int32 == 1);
   prv_save_settings();
   layer_mark_dirty(s_canvas_layer);
 }
@@ -667,8 +671,6 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
 static void accel_tap_handler(AccelAxisType axis, int32_t direction) {
   if (s_settings.OverlayMode != OVERLAY_SHAKE) return;
   s_show_overlay = !s_show_overlay;
-  // Note: s_show_overlay is intentionally NOT saved -- overlay always starts
-  // visible on reboot so the face reads as a normal watchface on first glance.
   layer_mark_dirty(s_canvas_layer);
 }
 
@@ -713,7 +715,7 @@ static void init(void) {
   update_steps();
 #endif
   app_message_register_inbox_received(inbox_received);
-  app_message_open(512, 64);
+  app_message_open(768, 64);  // bumped: more keys now
 }
 
 static void deinit(void) {
