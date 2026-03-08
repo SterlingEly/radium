@@ -39,19 +39,31 @@ Versions follow the `versionLabel` in `appinfo.json`.
 
 ---
 
-## [2.0] — 2025 (initial rebuild)
+## [2.0] — 2025
 
-Original v2.0 implementation. Established the core architecture:
+Original v2.0 implementation. Established the core architecture as a full rebuild by Sterling Ely:
 - Radial bar graph concept restored from the original Radium watchface (~2016).
 - Wedge-based tick drawing for rect platforms; `graphics_fill_radial` arcs for round.
 - Outer ring: battery (right half) + steps (left half), 3° gaps at 12 and 6 o'clock.
 - Overlay: day name / time / date block, shake-to-toggle.
 - 9 color slots, 24 presets (Dark, Light, Color rows).
 - Settings persistence via `SETTINGS_KEY 1`.
-- Platforms: aplite, basalt, chalk, diorite, emery. (Gabbro added/removed during submission.)
+- Platforms: aplite, basalt, chalk, diorite, emery, flint. (Gabbro added/removed during submission.)
 
 ---
 
-## [1.x] — ~2016–2017 (legacy, original implementations)
+## [1.0] — December 2016 (MicroByte)
 
-Radium was originally designed by Sterling Ely and implemented by two other developers across two separate builds. The core concept — a radial bar graph watchface where filled wedge/arc segments represent time, battery, and steps — dates from approximately 2016. Those builds are not present in this repository; Radium 2 is a clean reimplementation.
+First complete, publicly released version of Radium on the Pebble App Store. MicroByte developed this version starting from the earlier Matthew Reiss prototype. Store listing dates from December 9, 2016. No GitHub repository is known to exist for this version; the Radium 2 repo branches from the earlier Reiss code rather than this build.
+
+---
+
+## [0.x] — December 2015 (Matthew Reiss)
+
+Partial prototype implementation by Matthew Reiss, built from Sterling Ely's original design. Development ended with a last commit dated December 9, 2015. This is the version the Radium 2 repository was forked from.
+
+---
+
+## [concept] — ~2015 (Sterling Ely)
+
+Original watchface concept designed by Sterling Ely for the Pebble Time Round — a radial bar graph where filled wedge/arc segments represent time, battery, and steps. Designed to be readable as pure geometry with or without a digital overlay. Design files predate any implementation; exact date pending recovery of original assets.
