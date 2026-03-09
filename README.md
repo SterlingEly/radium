@@ -8,21 +8,21 @@
 
 Old radium dial watches are beautiful objects. The hour and minute markings glow independently of the hands, giving you a sense of time without needing to parse a needle position. Radium 2 brings that idea to Pebble: the right half of the screen fills with minute ticks, the left half with hour blocks, a thin outer ring tracks battery and steps — and in the center, optionally, a clean digital readout.
 
-The face works on two levels. With the overlay on, it reads like a normal watchface — time, date, day, done. Shake it, and the overlay disappears to reveal the full radial display: a pure starburst of glowing geometry that tells time in a completely different way. Shake again to bring it back.
+The face works on two levels. With the overlay on, it reads like a normal watchface: time, date, day. Shake it, and the overlay disappears to reveal the full radial display — a pure starburst of glowing geometry that tells time in a completely different way. Shake again to bring it back.
 
 ---
 
 ## Features
 
 - **Radial time display** — right half: 60 minute ticks in groups of 5. Left half: 12 hour blocks (or 24 in 24h mode, each block split in two)
+- **Overlay** — day, time, and date in the center circle; always-on, always-off, or shake-to-toggle
+- **Art mode** — set overlay to Always Off and the tick ring fills the whole face with no center hole
 - **Outer ring** — battery level on the right, step count on the left, both filling from 6 o'clock toward 12
-- **Shake to reveal** — overlay starts visible; shake toggles the digital readout off to show pure art mode, shake again to restore. Always resets to visible on reboot
-- **Art mode** — set overlay to "Always Off" and the tick ring fills the whole face, no center hole
 - **24h support** — each hour slot splits into two segments with a gap between them
 - **Full color customization** — 12 independently configurable color slots across text, lit elements, unlit elements, and base colors
 - **24 presets** in three rows (Dark, Light, Color) — one tap to apply
 - **B&W support** — Aplite, Diorite, and Flint get a clean high-contrast layout with optional invert toggle
-- **All platforms** — Aplite, Basalt, Chalk, Diorite, Emery, Flint *(Gabbro support in progress)*
+- **All platforms** — Aplite, Basalt, Chalk, Diorite, Emery, Flint *(Gabbro support coming)*
 
 ---
 
@@ -31,11 +31,11 @@ The face works on two levels. With the overlay on, it reads like a normal watchf
 ```
          12
     ███░░░░░░░░░
-  █             ░
- █   WEDNESDAY   ░
- █    10:42      ░
- █    MAR 02     ░
-  █             ░
+  █               ░
+ █    WEDNESDAY    ░
+ █     10:42       ░
+ █     MAR 09      ░
+  █               ░
     ░░░████████
          6
 ```
@@ -66,27 +66,25 @@ The face works on two levels. With the overlay on, it reads like a normal watchf
 | Basalt | Pebble Time | 144×168 color | |
 | Chalk | Pebble Time Round | 180×180 color | Round rendering |
 | Diorite | Pebble 2 | 144×168 B&W | High-contrast, invert option |
-| Emery | Pebble Time 2 | 200×228 color | Slightly larger overlay |
+| Emery | Pebble Time 2 | 200×228 color | Larger overlay circle |
 | Flint | Pebble 2 Duo | 144×168 B&W | High-contrast, invert option |
-| Gabbro | Pebble Round 2 | 260×260 color | Round rendering — support in progress |
+| Gabbro | Pebble Round 2 | 260×260 color | Round — coming soon |
 
-Center overlay circle is matched across form factors: 116px diameter on low-res rect/Chalk, 128px on Emery/Gabbro.
+Overlay circle diameter: 116px on standard rect and Chalk, 128px on Emery.
 
 ---
 
 ## History & credits
 
-Radium has a longer lineage than most Pebble watchfaces.
-
 **December 2015 — Original design (Sterling Ely)**
-The concept was designed by Sterling Ely for the Pebble Time Round. The core idea: a radial bar graph where filled wedge segments encode time, battery, and steps — readable as pure geometry even without a digital readout. The name "Radium" being a pun on radial was a happy coincidence.
+The concept was designed by Sterling Ely for the Pebble Time Round. The core idea: a radial bar graph where filled wedge segments encode time, battery, and steps — readable as pure geometry even without a digital readout. The name "Radium" being a pun on "radial" was a happy accident.
 
 **December 9, 2015 — Prototype implementation (MathewReiss)**
-Matthew Reiss built the first implementation based on the design.
+Mathew Reiss built the first implementation based on the design.
 GitHub: [MathewReiss/radium](https://github.com/MathewReiss/radium)
 
-**December 9, 2016 — v1.0 app store release (MicroByte)**
-MicroByte completed and published the first full release of Radium on the Pebble App Store.
+**December 9, 2016 — v1.0 release (MicroByte)**
+MicroByte completed and published the first full release on the Pebble App Store.
 Appstore: [apps.repebble.com](https://apps.repebble.com/en_US/application/584b212dce45dc907d00008f) · [apps.rebble.io](https://apps.rebble.io/en_US/application/584b212dce45dc907d00008f)
 
 **March 2026 — Radium 2 (Sterling Ely & Claude)**
@@ -118,7 +116,7 @@ Source files:
 - `src/main.c` — all drawing, event handling, settings persistence
 - `src/pkjs/config.js` — config page HTML/JS (built as a data URL)
 - `src/pkjs/index.js` — PebbleKit JS: platform detection, settings relay
-- `appinfo.json` — message keys, target platforms
+- `appinfo.json` — message keys, target platforms, version
 
 ---
 
