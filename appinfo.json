@@ -14,7 +14,8 @@
     "chalk",
     "diorite",
     "emery",
-    "flint"
+    "flint",
+    "gabbro"
   ],
   "watchapp": {
     "watchface": true
@@ -55,7 +56,7 @@
         "type": "png",
         "name": "IMAGE_MENU_ICON",
         "file": "images/menu_icon~color.png",
-        "targetPlatforms": ["basalt", "chalk", "emery"]
+        "targetPlatforms": ["basalt", "chalk", "emery", "gabbro"]
       }
     ]
   }
