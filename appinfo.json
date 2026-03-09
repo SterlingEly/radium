@@ -30,15 +30,5 @@
     "OverlayMode":      13,
     "InvertBW":         14,
     "ShowRing":         15
-  },
-  "resources": {
-    "media": [
-      {
-        "menuIcon": true,
-        "type": "png-trans",
-        "name": "IMAGE_MENU_ICON",
-        "file": "images/menu_icon_color.png"
-      }
-    ]
   }
 }
