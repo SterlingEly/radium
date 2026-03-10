@@ -1,0 +1,51 @@
+{
+    "author": "Sterling Ely",
+    "dependencies": {},
+    "keywords": [],
+    "name": "radium-2",
+    "pebble": {
+        "capabilities": [
+            "configurable",
+            "health"
+        ],
+        "displayName": "Radium 2",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "BackgroundColor",
+            "TimeTextColor",
+            "DateTextColor",
+            "LitHourColor",
+            "LitMinuteColor",
+            "LitBatteryColor",
+            "LitStepsColor",
+            "DimHourColor",
+            "DimMinuteColor",
+            "DimBatteryColor",
+            "DimStepsColor",
+            "OverlayBgColor",
+            "StepGoal",
+            "OverlayMode",
+            "InvertBW",
+            "ShowRing"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite",
+            "emery",
+            "gabbro",
+            "flint"
+        ],
+        "uuid": "2609e817-f8f2-4ad2-8846-cb05bb67d047",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "2.1.0"
+}
