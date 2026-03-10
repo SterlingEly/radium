@@ -17,12 +17,12 @@ The face works on two levels. With the overlay on, it reads like a normal watchf
 - **Radial time display** — right half: 60 minute ticks in groups of 5. Left half: 12 hour blocks (or 24 in 24h mode, each block split in two)
 - **Overlay** — day, time, and date in the center circle; always-on, always-off, or shake-to-toggle
 - **Art mode** — set overlay to Always Off and the tick ring fills the whole face with no center hole
-- **Outer ring** — battery level on the right, step count on the left, both filling from 6 o'clock toward 12
+- **Outer ring** — battery level on the right, step count on the left, both filling from 6 o'clock toward 12; hideable
 - **24h support** — each hour slot splits into two segments with a gap between them
 - **Full color customization** — 12 independently configurable color slots across text, lit elements, unlit elements, and base colors
-- **24 presets** in three rows (Dark, Light, Color) — one tap to apply
+- **40 presets** in five rows (Dark, Dark+, Light, Color, Special) — one tap to apply all 12 colors at once
 - **B&W support** — Aplite, Diorite, and Flint get a clean high-contrast layout with optional invert toggle
-- **All platforms** — Aplite, Basalt, Chalk, Diorite, Emery, Flint *(Gabbro support coming)*
+- **All platforms** — Aplite, Basalt, Chalk, Diorite, Emery, Flint, Gabbro
 
 ---
 
@@ -68,9 +68,7 @@ The face works on two levels. With the overlay on, it reads like a normal watchf
 | Diorite | Pebble 2 | 144×168 B&W | High-contrast, invert option |
 | Emery | Pebble Time 2 | 200×228 color | Larger overlay circle |
 | Flint | Pebble 2 Duo | 144×168 B&W | High-contrast, invert option |
-| Gabbro | Pebble Round 2 | 260×260 color | Round — coming soon |
-
-Overlay circle diameter: 116px on standard rect and Chalk, 128px on Emery.
+| Gabbro | Pebble Round 2 | 260×260 color | Round rendering |
 
 ---
 
@@ -117,6 +115,8 @@ Source files:
 - `src/pkjs/config.js` — config page HTML/JS (built as a data URL)
 - `src/pkjs/index.js` — PebbleKit JS: platform detection, settings relay
 - `appinfo.json` — message keys, target platforms, version
+
+Note: `resources/fonts/` contains Roboto font files left over from an earlier iteration. They are not referenced by the current build (all text uses Pebble system fonts) and can be safely deleted.
 
 ---
 
