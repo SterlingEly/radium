@@ -16,7 +16,7 @@ The outer ring tracks two more things quietly in the background: battery level o
 
 In the center, an overlay shows the exact time, day, and date. Shake to dismiss it and see the full radial display — a pure starburst of glowing geometry. Shake again to bring it back. Or set the overlay to always-on or always-off in settings.
 
-**Radium 2** is a complete rebuild of the original Radium watchface, designed in December 2015 and first published in December 2016. Rebuilt for all modern Pebble platforms with a new 24-preset color system and full per-element color customization.
+**Radium 2** is a complete rebuild of the original Radium watchface, designed in December 2015 and first published in December 2016. Rebuilt for all modern Pebble platforms with 40 color presets and full per-element color customization.
 
 ---
 
@@ -26,11 +26,32 @@ In the center, an overlay shows the exact time, day, and date. Shake to dismiss 
 - Art mode: set overlay to Always Off for a pure full-face starburst
 - 24h mode: each hour slot splits into two half-segments
 - Outer ring: battery (right half) and step count (left half), both filling from 6 o'clock
-- 24 color presets in three rows: Dark, Light, Color
+- Optional outer ring: hide it and tick art extends to the screen edge
+- 40 color presets in five rows: Dark, Dark+, Light, Color, Special
 - Full per-element color customization: 12 independent color slots
 - B&W invert mode for Pebble Classic, Pebble 2, and Pebble 2 Duo
 
-**Platforms:** Pebble Classic/Steel · Pebble Time/Steel · Pebble Time Round · Pebble 2 · Pebble Time 2 · Pebble 2 Duo
+**Platforms:** Pebble Classic/Steel · Pebble Time/Steel · Pebble Time Round · Pebble 2 · Pebble Time 2 · Pebble 2 Duo · Pebble Round 2
+
+---
+
+## Release Notes
+
+### v2.1
+- 40 color presets across five rows (Dark, Dark+, Light, Color, Special) — up from 24
+- 12 independent color slots: every element (hours, minutes, battery, steps, text, overlay, background) fully customizable
+- Independent unlit/dim colors per element
+- Overlay background color now independently configurable
+- Cascade color picker: tap any parent swatch to set a whole group at once
+- Bug fixes: platform detection, settings persistence, overlay on round platforms
+
+### v2.0
+- Complete rebuild from the original Radium codebase
+- Radial bar graph restored: wedge ticks on rect, arc ticks on round
+- Outer ring: battery right, steps left
+- Overlay with day / time / date; shake-to-toggle
+- 24 color presets (Dark, Light, Color), 9 color slots
+- Supports all Pebble platforms including Pebble Round 2
 
 ---
 

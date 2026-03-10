@@ -25,17 +25,20 @@ Versions follow the `versionLabel` in `appinfo.json`.
 - `app_message_open` inbox buffer increased from 512 to 768 bytes to accommodate additional message keys.
 - Hour tick width changed from 10° to 9° (gap 5° → 6°) for visual consistency with minute ticks; pitch unchanged at 15°.
 - 24h mode divider changed from a 2° cut to a 3° cut (even thirds of the 9° tick block).
-- Default overlay mode remains **Shake**; overlay starts visible on every reboot.
 - Overlay circle now drawn on both rect and round platforms (previously guarded by `!is_round`, silently ignoring `OverlayBgColor` on Chalk/Emery).
 - Rect ring gap tuned to 5 px (from 3 px) for cleaner visual separation at the 12 and 6 o'clock positions.
-- Round ring arc sweep remains 174° (3°–177° / 183°–357°).
 - GoldenEye preset updated: dim hours `#aa5500→#550000`, lit ticks/battery/steps `#aaffaa→#00ff00`.
-- Gabbro temporarily removed from `targetPlatforms` due to a store submission issue; draw code remains intact.
 
 ### Bug fixes
 - Fixed platform detection inversion that caused B&W-platform color logic to run on color watches and vice versa.
 - Fixed settings not persisting across app reloads (`localStorage` now used correctly in `index.js`).
 - Fixed overlay circle being skipped on round platforms, causing `OverlayBgColor` to have no effect on Chalk/Emery.
+
+---
+
+## [2.0.1] — 2025
+
+- Re-added Gabbro (Pebble Round 2) to `targetPlatforms` after initial submission issue was resolved.
 
 ---
 
@@ -45,10 +48,12 @@ Original v2.0 implementation. Established the core architecture as a full rebuil
 - Radial bar graph concept restored from the original Radium watchface (~2016).
 - Wedge-based tick drawing for rect platforms; `graphics_fill_radial` arcs for round.
 - Outer ring: battery (right half) + steps (left half), 3° gaps at 12 and 6 o'clock.
-- Overlay: day name / time / date block, shake-to-toggle.
-- 9 color slots, 24 presets (Dark, Light, Color rows).
-- Settings persistence via `SETTINGS_KEY 1`.
-- Platforms: aplite, basalt, chalk, diorite, emery, flint. (Gabbro added/removed during submission.)
+- Overlay: day name / time / date block, shake-to-toggle (always-on / always-off / shake modes).
+- Overlay starts visible on every reboot.
+- 9 color slots, 24 presets across three rows (Dark, Light, Color).
+- Settings persistence via `localStorage` in `index.js`.
+- Platform detection: B&W watches (aplite, diorite, flint) show invert toggle; color watches show full color UI.
+- Platforms: aplite, basalt, chalk, diorite, emery, flint.
 
 ---
 
