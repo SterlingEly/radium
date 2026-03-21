@@ -39,8 +39,8 @@ typedef struct {
   bool   InvertBW;         // B&W only: swap black/white at draw time
   bool   ShowRing;         // show/hide outer battery+steps ring
   // Tip colors (2) — NEW in v2.2: leading edge tick on hour and minute bars
-  GColor LitHourTipColor;    // color of the current/leading hour tick
-  GColor LitMinuteTipColor;  // color of the current/leading minute tick
+  GColor LitHourTipColor;
+  GColor LitMinuteTipColor;
 } RadiumSettings;
 
 static RadiumSettings s_settings;
@@ -204,16 +204,14 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   int inner_short  = (tick_rect.size.w < tick_rect.size.h)
                      ? tick_rect.size.w : tick_rect.size.h;
 
+  // tick_thick: same proportion for all platforms.
+  // On round, radials fill from the screen edge inward — the overlay circle
+  // covers the center. No inner radius calculation needed.
   int tick_thick;
   if (s_settings.OverlayMode == OVERLAY_OFF) {
     tick_thick = inner_short;
   } else {
-#if defined(PBL_ROUND)
-    tick_thick = (h > 180) ? inner_short * 36 / 164
-                           : inner_short * 18 / 164;
-#else
     tick_thick = inner_short * 19 / 164;
-#endif
   }
 
   int radius = ((w > h) ? w : h) - RING_THICK - 1;
@@ -235,7 +233,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     int filled_groups = s_minute / 5;
     int partial_min   = s_minute % 5;
 
-    // Minute tip: last filled tick overall
     bool has_min_tip   = (s_minute > 0);
     int  min_tip_group = (partial_min > 0) ? filled_groups   : filled_groups - 1;
     int  min_tip_tick  = (partial_min > 0) ? partial_min - 1 : 4;
@@ -325,33 +322,25 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     int filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
     int filled_half  = s_hour % 2;
 
-    // Hour tip logic:
-    // 12h: tip = last filled slot (filled_slots - 1). No partial concept.
-    // 24h: tip = current slot (filled_slots), which may be partially filled.
-    //      The previously complete slots (0..filled_slots-1) draw in normal color.
-    //      Exception: hour 0 in 24h has no filled slots yet, no tip.
+    // 24h tip model — one slot = two hours:
+    //   hour 0:              nothing lit, no tip
+    //   odd hour (h%2==1):   slot h/2 first half just entered — tip = first half only
+    //   even hour (h%2==0):  slot h/2-1 second half just completed —
+    //                        first half draws normal, second half = tip
+    // 12h: tip = last filled slot, full wedge.
     bool has_hour_tip;
     int  hour_tip_slot;
     if (!is_24h) {
       has_hour_tip  = (filled_slots > 0);
       hour_tip_slot = filled_slots - 1;
     } else {
-      // In 24h: s_hour 0 = no slots filled yet (midnight, nothing lit)
-      // s_hour 1 = slot 0 first half only; s_hour 2 = slot 0 complete; etc.
-      // The "current" slot being filled is always filled_slots (0-indexed),
-      // unless we're exactly on an even hour where that slot just completed —
-      // in that case filled_half==0 means the next slot hasn't started yet.
-      // Tip = filled_slots slot if filled_half==1 (first half active),
-      //     OR if filled_slots > 0 AND filled_half==0 (slot just finished, tip = filled_slots-1).
       if (s_hour == 0) {
         has_hour_tip  = false;
         hour_tip_slot = 0;
       } else if (filled_half == 1) {
-        // Odd hour: current slot is partially filled, tip it
         has_hour_tip  = true;
-        hour_tip_slot = filled_slots;  // the slot currently being entered
+        hour_tip_slot = filled_slots;
       } else {
-        // Even hour > 0: filled_slots complete pairs done, tip the last complete slot
         has_hour_tip  = (filled_slots > 0);
         hour_tip_slot = filled_slots - 1;
       }
@@ -381,7 +370,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
     // Filled hours
     if (!is_24h) {
-      // 12h: draw slots 0..tip-1 in normal color, tip slot in tip color
       graphics_context_set_fill_color(ctx, col_hour);
       graphics_context_set_stroke_color(ctx, col_hour);
       int draw_to = has_hour_tip ? hour_tip_slot : filled_slots;
@@ -398,7 +386,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       }
 #endif
     } else {
-      // 24h: draw all complete slots except tip in normal color
+      // 24h rect
       graphics_context_set_fill_color(ctx, col_hour);
       graphics_context_set_stroke_color(ctx, col_hour);
       int complete_draw_to = has_hour_tip ? hour_tip_slot : filled_slots;
@@ -410,28 +398,18 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 #if defined(PBL_COLOR)
       if (has_hour_tip) {
         int a = 183 + 15*hour_tip_slot;
-        graphics_context_set_fill_color(ctx, col_hour_tip);
-        graphics_context_set_stroke_color(ctx, col_hour_tip);
         if (filled_half == 1) {
-          // Tip slot is partially filled: only first half
+          // Odd hour: first half = tip only
+          graphics_context_set_fill_color(ctx, col_hour_tip);
+          graphics_context_set_stroke_color(ctx, col_hour_tip);
           draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
         } else {
-          // Tip slot is a completed pair (even hour tip = last complete slot)
+          // Even hour > 0: first half = normal, second half = tip
+          graphics_context_set_fill_color(ctx, col_hour);
+          graphics_context_set_stroke_color(ctx, col_hour);
           draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a),     DEG_TO_TRIGANGLE(a + 3));
-          draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
-          // The current partially-filling slot (filled_slots) draws in normal color after tip
-          if (filled_slots < 12) {
-            graphics_context_set_fill_color(ctx, col_hour);
-            graphics_context_set_stroke_color(ctx, col_hour);
-            int pa = 183 + 15*filled_slots;
-            draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(pa), DEG_TO_TRIGANGLE(pa + 3));
-          }
-        }
-      } else if (is_24h && filled_slots < 12) {
-        // No tip yet (hour 0): draw partial current slot in normal color
-        int a = 183 + 15*filled_slots;
-        draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
-        if (filled_half == 1) {
+          graphics_context_set_fill_color(ctx, col_hour_tip);
+          graphics_context_set_stroke_color(ctx, col_hour_tip);
           draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
         }
       }
@@ -456,6 +434,8 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   } else {
     // ==== ROUND PATH ====
+    // Full radials from screen edge inward by tick_thick.
+    // The overlay circle covers the center — no inner radius tricks needed.
 
     // -- Minutes --
     graphics_context_set_fill_color(ctx, col_dmin);
@@ -488,7 +468,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       int filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
       int filled_half  = s_hour % 2;
 
-      // Same tip logic as rect
       bool has_hour_tip;
       int  hour_tip_slot;
       if (!is_24h) {
@@ -553,28 +532,26 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 #if defined(PBL_COLOR)
         if (has_hour_tip) {
           int a = 183 + 15*hour_tip_slot;
-          graphics_context_set_fill_color(ctx, col_hour_tip);
           if (filled_half == 1) {
+            // Odd hour: first half = tip only
+            graphics_context_set_fill_color(ctx, col_hour_tip);
             graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                                  DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
           } else {
+            // Even hour > 0: first half = normal, second half = tip
+            graphics_context_set_fill_color(ctx, col_hour);
             graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                                  DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
+            graphics_context_set_fill_color(ctx, col_hour_tip);
             graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                                  DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
-            if (filled_slots < 12) {
-              graphics_context_set_fill_color(ctx, col_hour);
-              int pa = 183 + 15*filled_slots;
-              graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
-                                   DEG_TO_TRIGANGLE(pa), DEG_TO_TRIGANGLE(pa + 3));
-            }
           }
-        } else if (s_hour == 0 && filled_slots < 12) {
-          // Hour 0: no tip, no filled slots
         }
 #else
-        if (!has_hour_tip && filled_slots < 12) {
+        // B&W round 24h: no tip distinction
+        if (filled_slots < 12) {
           int a = 183 + 15*filled_slots;
+          graphics_context_set_fill_color(ctx, col_hour);
           graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                                DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
           if (filled_half == 1) {
@@ -583,7 +560,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
           }
         }
 #endif
-        // Re-cut 24h dividers
+        // Re-cut 24h dividers over all lit slots
         graphics_context_set_fill_color(ctx, col_bg);
         for (int h2 = 0; h2 <= filled_slots && h2 < 12; h2++) {
           int a2 = 183 + 15*h2 + 3;
@@ -595,22 +572,17 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   }
 
   // ----------------------------------------------------------
-  // CENTER OVERLAY CIRCLE
-  // overlay_r for round: use existing small sizes (large overlay is future work)
+  // CENTER OVERLAY CIRCLE — 58px radius, all platforms.
+  // Covers tick centers on rect and inner radials on round.
+  // Per-platform sizing and large overlay option are future work.
   // ----------------------------------------------------------
   if (prv_overlay_visible()) {
-    int overlay_r;
-    if (is_round) {
-      overlay_r = (w >= 180) ? 76 : 58;
-    } else {
-      overlay_r = (w >= 200) ? 64 : 58;
-    }
     graphics_context_set_fill_color(ctx, col_obg);
-    graphics_fill_circle(ctx, GPoint(cx, cy), overlay_r);
+    graphics_fill_circle(ctx, GPoint(cx, cy), 58);
   }
 
   // ----------------------------------------------------------
-  // INNER GAP STRIP (rect only)
+  // INNER GAP STRIP (rect only) — separates ticks from outer ring
   // ----------------------------------------------------------
 #if !defined(PBL_ROUND)
   if (show_ring) {
