@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <limits.h>
 
 // ============================================================
 // CONSTANTS
@@ -317,7 +318,6 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor co
     bool ready  = is_f ? (s_weather_temp_f != INT_MIN) : (s_weather_temp_c != INT_MIN);
     char *tbuf  = is_f ? s_temp_f_buffer : s_temp_c_buffer;
     if (!ready) {
-      // Not yet received
       graphics_context_set_text_color(ctx, col);
       graphics_draw_text(ctx, "--", font,
         GRect(0, y, w, small_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
