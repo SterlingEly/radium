@@ -93,10 +93,11 @@ static void prv_default_settings(void) {
   s_settings.OverlayMode      = OVERLAY_SHAKE;
   s_settings.InvertBW         = false;
   s_settings.ShowRing         = true;
-  s_settings.TopOuterField    = FIELD_NONE;
+  // DEBUG: all 4 slots populated to test 2-line spacing
+  s_settings.TopOuterField    = FIELD_TEMP_F;
   s_settings.TopInnerField    = FIELD_DAY_LONG;
   s_settings.BottomInnerField = FIELD_DATE;
-  s_settings.BottomOuterField = FIELD_NONE;
+  s_settings.BottomOuterField = FIELD_STEPS;
 }
 
 static void prv_save_settings(void) {
