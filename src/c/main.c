@@ -292,8 +292,8 @@ static void draw_weather_icon(GContext *ctx, int ox, int oy, GColor col, int ico
 // OVERLAY FIELD DRAWING
 //
 // y = top of the 18px slot.
-// GOTHIC_18_BOLD has internal top padding; icons offset by
-// ICON_Y_OFFSET to visually align with text cap height.
+// GOTHIC_18_BOLD has ~7px internal top padding; visible glyphs
+// appear at y+7. ICON_Y_OFFSET nudges icons to match.
 //
 // Icon + text layout centered on cx:
 //   icon: 11px at cx-18, gap 2px, text starts at cx-5
@@ -844,23 +844,23 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   // ----------------------------------------------------------
   // TEXT / FIELD OVERLAY
   //
-  // Slot y positions: y is the TOP of the 18px render slot.
-  // The slot bottom is at y + small_h.
+  // GOTHIC_18_BOLD has ~7px internal top padding: visible glyphs
+  // appear at slot_y + 7. All gap values are measured to the
+  // visible glyph top, not the slot top.
   //
-  // 1 field:  slot bottom = time edge + 2px gap
-  //           → y = time_y - small_h - 2  (top)
-  //           → y = time_y + time_h + 2   (bottom)
+  // 1 field:  glyph top = time_y - (small_h - 7) - 2 = time_y - 13
+  //           (slot y = time_y - small_h - 2)
   //
-  // 2 fields: treat as a tight unit packed close to the time.
-  //           inner slot bottom = time edge + 3px gap
-  //           outer slot bottom = inner slot top - 3px gap
-  //           → inner_y = time_y - small_h - 3
-  //           → outer_y = inner_y - small_h - 3
-  //           (symmetric for bottom hemisphere)
+  // 2 fields: inner glyph top = time_y - 7  (flush against time)
+  //           outer glyph top = inner_y + small_h + 2 above inner
+  //           inner slot y = time_y - 7  (= time_y - (small_h - small_h + 7 - 7))
+  //           outer slot y = inner_y - small_h - 2
   // ----------------------------------------------------------
   if (prv_overlay_visible()) {
     int time_h  = 40;
     int small_h = 18;
+    // GOTHIC_18_BOLD internal top padding — glyphs start this many px below slot top
+    int font_pad = 7;
 
     int time_y    = cy - time_h / 2 - 2;
     int top_inner = s_settings.TopInnerField;
@@ -877,24 +877,31 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       GRect(0, time_y, w, time_h + 4),
       GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
-    // Top fields (grow upward from time_y)
+    // Top fields (grow upward)
+    // 1-line: slot bottom = time_y - 2  → glyphs at time_y - 2 - (small_h - font_pad) = time_y - 13
+    // 2-line: inner slot y chosen so glyphs sit right against time_y (gap ~0)
+    //         inner_y = time_y - font_pad  → glyphs at time_y
+    //         outer_y = inner_y - small_h - 2
     if (top_count == 1) {
       int field = top_inner ? top_inner : top_outer;
       draw_field(ctx, field, time_y - small_h - 2, w, cx, col_dfg);
     } else if (top_count == 2) {
-      int inner_y = time_y - small_h - 3;
-      int outer_y = inner_y - small_h - 3;
+      int inner_y = time_y - font_pad;
+      int outer_y = inner_y - small_h - 2;
       draw_field(ctx, top_inner, inner_y, w, cx, col_dfg);
       draw_field(ctx, top_outer, outer_y, w, cx, col_dfg);
     }
 
-    // Bottom fields (grow downward from time bottom)
+    // Bottom fields (grow downward)
+    // 1-line: slot top = time_y + time_h + 2
+    // 2-line: inner slot top = time_y + time_h + 2 - font_pad (glyphs flush against time bottom)
+    //         outer_y = inner_y + small_h + 2
     if (bot_count == 1) {
       int field = bot_inner ? bot_inner : bot_outer;
       draw_field(ctx, field, time_y + time_h + 2, w, cx, col_dfg);
     } else if (bot_count == 2) {
-      int inner_y = time_y + time_h + 3;
-      int outer_y = inner_y + small_h + 3;
+      int inner_y = time_y + time_h + 2 - font_pad;
+      int outer_y = inner_y + small_h + 2;
       draw_field(ctx, bot_inner, inner_y, w, cx, col_dfg);
       draw_field(ctx, bot_outer, outer_y, w, cx, col_dfg);
     }
