@@ -82,6 +82,15 @@ module.exports = {
       '#ffff00':'GColorYellow','#ffff55':'GColorIcterine','#ffffaa':'GColorPastelYellow','#ffffff':'GColorWhite'
     };
 
+    var fieldOptions = [
+      { value: 0, label: 'None' },
+      { value: 1, label: 'Day (long)' },
+      { value: 2, label: 'Date' },
+      { value: 3, label: 'Day + Date' },
+      { value: 4, label: 'Steps' },
+      { value: 5, label: 'Temperature' },
+    ];
+
     var platformData = 'var PLATFORM=' + JSON.stringify(platform || 'color') + ';'
       + 'var CURRENT=' + JSON.stringify(currentSettings || null) + ';';
     var presetsData = 'var PRESETS=' + JSON.stringify(presets) + ';';
@@ -109,6 +118,13 @@ module.exports = {
         + '<div class="preset-row">' + rowItems + '</div>';
     }).join('');
 
+    function makeSelect(id, defaultVal) {
+      var opts = fieldOptions.map(function(o) {
+        return '<option value="' + o.value + '"' + (o.value === defaultVal ? ' selected' : '') + '>' + o.label + '</option>';
+      }).join('');
+      return '<select id="' + id + '" onchange="updateFieldPreview()" style="background:#242424;color:#ddd;border:1px solid #333;border-radius:6px;padding:6px 8px;font-size:14px;flex:1">' + opts + '</select>';
+    }
+
     var html = '<!DOCTYPE html><html><head>'
       + '<meta name="viewport" content="width=device-width,initial-scale=1">'
       + '<title>Radium 2</title>'
@@ -124,6 +140,9 @@ module.exports = {
       + '.row:last-child{border-bottom:none}'
       + '.row label{font-size:15px;color:#ddd;flex:1}'
       + '.row .right{display:flex;align-items:center;gap:8px}'
+      + '.field-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid #222;gap:12px}'
+      + '.field-row:last-child{border-bottom:none}'
+      + '.field-row label{font-size:14px;color:#aaa;white-space:nowrap;min-width:80px}'
       + '.swatch{width:36px;height:28px;border-radius:5px;cursor:pointer;border:2px solid #333;flex-shrink:0}'
       + '.expand-row{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid #222;cursor:pointer;user-select:none}'
       + '.expand-row:last-child{border-bottom:none}'
@@ -146,7 +165,6 @@ module.exports = {
       + '.sub-sub-row{display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px 42px;border-bottom:1px solid #181818}'
       + '.sub-sub-row:last-child{border-bottom:none}'
       + '.sub-sub-row label{font-size:13px;color:#888;flex:1}'
-      // Level 3: tip rows sit one level deeper under Hours/Minutes
       + '.sub-sub-expand-row{display:flex;align-items:center;justify-content:space-between;padding:8px 14px 8px 42px;border-bottom:1px solid #181818;cursor:pointer;user-select:none}'
       + '.sub-sub-expand-row label{font-size:13px;color:#888;flex:1;cursor:pointer}'
       + '.sub-sub-expand-row .right{display:flex;align-items:center;gap:8px}'
@@ -201,6 +219,15 @@ module.exports = {
       + '<input type="radio" name="overlay" id="ov2" value="2"><label for="ov2">Shake</label>'
       + '</div></div>'
 
+      // DISPLAY FIELDS
+      + '<h2>Display Fields</h2><div class="card">'
+      + '<span class="note" style="padding:10px 14px 4px;display:block;color:#666;font-size:12px">1 field per slot = 12px from time &nbsp;|&nbsp; 2 fields = 6px spacing</span>'
+      + '<div class="field-row"><label>Top outer</label>' + makeSelect('TopOuterField', 0) + '</div>'
+      + '<div class="field-row"><label>Top inner</label>' + makeSelect('TopInnerField', 1) + '</div>'
+      + '<div class="field-row"><label>Bottom inner</label>' + makeSelect('BottomInnerField', 2) + '</div>'
+      + '<div class="field-row"><label>Bottom outer</label>' + makeSelect('BottomOuterField', 0) + '</div>'
+      + '</div>'
+
       // COLOR SECTION
       + '<div id="color-section">'
       + '<h2>Presets</h2><div class="card"><div class="presets">' + presetsHtml + '</div></div>'
@@ -217,21 +244,17 @@ module.exports = {
       + '<div class="sub-row"><label>Date &amp; Day</label><div class="swatch" id="sw-DateTextColor" onclick="openPicker(\'DateTextColor\')"></div></div>'
       + '</div>'
 
-      // LIT — Hours and Minutes each get a tip sub-level
+      // LIT
       + '<div class="expand-row" onclick="toggle(\'lit\')">'
       + '<label>Lit</label>'
       + '<div class="right"><div class="swatch" id="sw-LitAll" onclick="openPicker(\'LitAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-lit">+</span></div>'
       + '</div>'
       + '<div class="sub-rows" id="sub-lit">'
-
-      // LitTicks — expandable
       + '<div class="sub-expand-row" onclick="toggle2(\'litticks\')">'
       + '<label>Time Ticks</label>'
       + '<div class="right"><div class="swatch" id="sw-LitTicks" onclick="openPicker(\'LitTicks\');event.stopPropagation()"></div><span class="sub-expand-btn" id="btn2-litticks">+</span></div>'
       + '</div>'
       + '<div class="sub-sub-rows" id="sub2-litticks">'
-
-      // Hours — expandable (has tip child)
       + '<div class="sub-sub-expand-row" onclick="toggle3(\'lithours\')">'
       + '<label>Hours</label>'
       + '<div class="right"><div class="swatch" id="sw-LitHourColor" onclick="openPicker(\'LitHourColor\');event.stopPropagation()"></div><span class="sub-sub-expand-btn" id="btn3-lithours">+</span></div>'
@@ -239,8 +262,6 @@ module.exports = {
       + '<div class="sub-sub-sub-rows" id="sub3-lithours">'
       + '<div class="sub-sub-sub-row"><label>Leading tick</label><div class="swatch" id="sw-LitHourTipColor" onclick="openPicker(\'LitHourTipColor\')"></div></div>'
       + '</div>'
-
-      // Minutes — expandable (has tip child)
       + '<div class="sub-sub-expand-row" onclick="toggle3(\'litminutes\')">'
       + '<label>Minutes</label>'
       + '<div class="right"><div class="swatch" id="sw-LitMinuteColor" onclick="openPicker(\'LitMinuteColor\');event.stopPropagation()"></div><span class="sub-sub-expand-btn" id="btn3-litminutes">+</span></div>'
@@ -248,10 +269,7 @@ module.exports = {
       + '<div class="sub-sub-sub-rows" id="sub3-litminutes">'
       + '<div class="sub-sub-sub-row"><label>Leading tick</label><div class="swatch" id="sw-LitMinuteTipColor" onclick="openPicker(\'LitMinuteTipColor\')"></div></div>'
       + '</div>'
-
-      + '</div>' // end sub2-litticks
-
-      // LitRing
+      + '</div>'
       + '<div class="sub-expand-row" onclick="toggle2(\'litring\')">'
       + '<label>Outer Ring</label>'
       + '<div class="right"><div class="swatch" id="sw-LitRing" onclick="openPicker(\'LitRing\');event.stopPropagation()"></div><span class="sub-expand-btn" id="btn2-litring">+</span></div>'
@@ -260,7 +278,7 @@ module.exports = {
       + '<div class="sub-sub-row"><label>Battery</label><div class="swatch" id="sw-LitBatteryColor" onclick="openPicker(\'LitBatteryColor\')"></div></div>'
       + '<div class="sub-sub-row"><label>Steps</label><div class="swatch" id="sw-LitStepsColor" onclick="openPicker(\'LitStepsColor\')"></div></div>'
       + '</div>'
-      + '</div>' // end sub-lit
+      + '</div>'
 
       // UNLIT
       + '<div class="expand-row" onclick="toggle(\'dim\')">'
@@ -284,7 +302,7 @@ module.exports = {
       + '<div class="sub-sub-row"><label>Battery</label><div class="swatch" id="sw-DimBatteryColor" onclick="openPicker(\'DimBatteryColor\')"></div></div>'
       + '<div class="sub-sub-row"><label>Steps</label><div class="swatch" id="sw-DimStepsColor" onclick="openPicker(\'DimStepsColor\')"></div></div>'
       + '</div>'
-      + '</div>' // end sub-dim
+      + '</div>'
 
       // BASE
       + '<div class="expand-row" onclick="toggle(\'base\')">'
@@ -296,8 +314,8 @@ module.exports = {
       + '<div class="sub-row"><label>Background</label><div class="swatch" id="sw-BackgroundColor" onclick="openPicker(\'BackgroundColor\')"></div></div>'
       + '</div>'
 
-      + '</div>'  // end colors card
-      + '</div>'  // end color-section
+      + '</div>'
+      + '</div>'
 
       // B&W SECTION
       + '<div id="bw-section">'
@@ -417,6 +435,7 @@ module.exports = {
       + 'else if(k==="InvertBW"){document.getElementById("InvertBW").checked=!!CURRENT[k];}'
       + 'else if(k==="ShowRing"){document.getElementById("ShowRing").checked=!!CURRENT[k];}'
       + 'else if(k==="StepGoal"){var el=document.getElementById("StepGoal");el.value=CURRENT[k];document.getElementById("goalVal").textContent=parseInt(CURRENT[k]).toLocaleString();}'
+      + 'else if(k==="TopOuterField"||k==="TopInnerField"||k==="BottomInnerField"||k==="BottomOuterField"){var el=document.getElementById(k);if(el)el.value=CURRENT[k];}'
       + 'else if(colors[k]!==undefined){var hex="#"+(CURRENT[k]>>>0).toString(16).padStart(6,"0");updateSwatches(k,hex);}'
       + '});'
       + '}catch(e){}}'
@@ -450,6 +469,7 @@ module.exports = {
 
       + 'function h(hex){return parseInt(hex.slice(1),16);}'
       + 'function tog(id){return document.getElementById(id).checked?1:0;}'
+      + 'function sel(id){return parseInt(document.getElementById(id).value)||0;}'
 
       + 'function save(){'
       + 'var ov=parseInt(document.querySelector(\'input[name="overlay"]:checked\').value);'
@@ -471,7 +491,11 @@ module.exports = {
       + 'LitMinuteTipColor:h(colors.LitMinuteTipColor),'
       + 'InvertBW:tog("InvertBW"),'
       + 'ShowRing:tog("ShowRing"),'
-      + 'StepGoal:parseInt(document.getElementById("StepGoal").value)'
+      + 'StepGoal:parseInt(document.getElementById("StepGoal").value),'
+      + 'TopOuterField:sel("TopOuterField"),'
+      + 'TopInnerField:sel("TopInnerField"),'
+      + 'BottomInnerField:sel("BottomInnerField"),'
+      + 'BottomOuterField:sel("BottomOuterField")'
       + '};'
       + 'window.location="pebblejs://close#"+encodeURIComponent(JSON.stringify(s));}'
 

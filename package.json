@@ -28,7 +28,11 @@
             "InvertBW",
             "ShowRing",
             "LitHourTipColor",
-            "LitMinuteTipColor"
+            "LitMinuteTipColor",
+            "TopOuterField",
+            "TopInnerField",
+            "BottomInnerField",
+            "BottomOuterField"
         ],
         "projectType": "native",
         "resources": {
