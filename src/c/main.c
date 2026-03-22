@@ -18,9 +18,18 @@
 #define FIELD_DATE      2  // "MAR 21"
 #define FIELD_DAY_DATE  3  // "SAT MAR 21"
 #define FIELD_STEPS     4  // steps icon + count
-#define FIELD_TEMP      5  // weather icon + temp (placeholder)
+#define FIELD_TEMP      5  // weather icon + temp
 
-// Short day names
+// WMO weather code groups
+// 0        = clear
+// 1-3      = partly cloudy
+// 45,48    = fog
+// 51-67    = drizzle/rain
+// 71-77    = snow
+// 80-82    = rain showers
+// 85-86    = snow showers
+// 95-99    = thunderstorm
+
 static const char *s_short_days[] = {
   "SUN","MON","TUE","WED","THU","FRI","SAT"
 };
@@ -89,7 +98,6 @@ static void prv_default_settings(void) {
   s_settings.OverlayMode      = OVERLAY_SHAKE;
   s_settings.InvertBW         = false;
   s_settings.ShowRing         = true;
-  // Default: top inner = day, bottom inner = date (matches old layout)
   s_settings.TopOuterField    = FIELD_NONE;
   s_settings.TopInnerField    = FIELD_DAY_LONG;
   s_settings.BottomInnerField = FIELD_DATE;
@@ -120,11 +128,16 @@ static int  s_battery = 100;
 static int  s_steps   = 0;
 static bool s_show_overlay = true;
 
+// Weather state — updated by index.js via AppMessage
+static int  s_weather_temp = INT_MIN;  // INT_MIN = not yet received
+static int  s_weather_code = 0;
+
 static char s_time_buffer[8];
-static char s_day_buffer[12];    // "SATURDAY"
-static char s_date_buffer[10];   // "MAR 21"
-static char s_day_date_buffer[14]; // "SAT MAR 21"
-static char s_steps_buffer[8];   // "8,432"
+static char s_day_buffer[12];
+static char s_date_buffer[10];
+static char s_day_date_buffer[14];
+static char s_steps_buffer[8];
+static char s_temp_buffer[8];   // e.g. "72°F"
 
 static GPoint    s_tri_pts[3];
 static GPathInfo s_tri_info = { .num_points = 3, .points = s_tri_pts };
@@ -162,59 +175,78 @@ static void draw_wedge(GContext *ctx, int cx, int cy, int radius,
   gpath_draw_filled(ctx, s_tri_path);
 }
 
-// Draw an 11x11 steps icon at (ox, oy) — right-triangle shape
-// representing forward motion / progress
+// ============================================================
+// WEATHER CODE -> ICON TYPE
+// Returns: 0=sun, 1=partly cloudy, 2=cloud, 3=rain, 4=snow, 5=storm
+// ============================================================
+static int weather_icon_for_code(int code) {
+  if (code == 0)                                  return 0;  // clear
+  if (code >= 1  && code <= 3)                    return 1;  // partly cloudy
+  if (code >= 45 && code <= 48)                   return 2;  // fog/cloud
+  if ((code >= 51 && code <= 67) ||
+      (code >= 80 && code <= 82))                 return 3;  // rain
+  if ((code >= 71 && code <= 77) ||
+      (code >= 85 && code <= 86))                 return 4;  // snow
+  if (code >= 95 && code <= 99)                   return 5;  // storm
+  return 2;  // default: cloud
+}
+
+// ============================================================
+// 11x11 ICON DRAWING
+// ============================================================
 static void draw_steps_icon(GContext *ctx, int ox, int oy, GColor col) {
   graphics_context_set_stroke_color(ctx, col);
   graphics_context_set_stroke_width(ctx, 1);
-  // Bottom row
   graphics_draw_line(ctx, GPoint(ox, oy+10), GPoint(ox+10, oy+10));
-  // Right column
   graphics_draw_line(ctx, GPoint(ox+10, oy), GPoint(ox+10, oy+10));
-  // Diagonal
   for (int i = 0; i <= 10; i++) {
     graphics_draw_pixel(ctx, GPoint(ox + (10-i), oy + i));
   }
 }
 
-// Draw an 11x11 sun icon at (ox, oy)
 static void draw_sun_icon(GContext *ctx, int ox, int oy, GColor col) {
   graphics_context_set_stroke_color(ctx, col);
   graphics_context_set_stroke_width(ctx, 1);
-  // Circle (5px radius, center at ox+5, oy+5)
-  // Approximate circle pixels at r=3:
   int cx = ox+5, cy = oy+5;
-  // inner circle r=3
   graphics_draw_circle(ctx, GPoint(cx, cy), 3);
-  // Cardinal rays
-  graphics_draw_pixel(ctx, GPoint(cx, oy));      // top
+  graphics_draw_pixel(ctx, GPoint(cx, oy));
   graphics_draw_pixel(ctx, GPoint(cx, oy+1));
-  graphics_draw_pixel(ctx, GPoint(cx, oy+10));   // bottom
+  graphics_draw_pixel(ctx, GPoint(cx, oy+10));
   graphics_draw_pixel(ctx, GPoint(cx, oy+9));
-  graphics_draw_pixel(ctx, GPoint(ox, cy));      // left
+  graphics_draw_pixel(ctx, GPoint(ox, cy));
   graphics_draw_pixel(ctx, GPoint(ox+1, cy));
-  graphics_draw_pixel(ctx, GPoint(ox+10, cy));   // right
+  graphics_draw_pixel(ctx, GPoint(ox+10, cy));
   graphics_draw_pixel(ctx, GPoint(ox+9, cy));
 }
 
-// Draw an 11x11 cloud icon at (ox, oy)
 static void draw_cloud_icon(GContext *ctx, int ox, int oy, GColor col) {
   graphics_context_set_fill_color(ctx, col);
-  // Cloud shape: rows 2-6, wider in middle
-  // Row 1-2: top bump
   graphics_fill_rect(ctx, GRect(ox+3, oy+1, 3, 2), 0, GCornerNone);
-  // Row 2-3: second bump (right)
   graphics_fill_rect(ctx, GRect(ox+6, oy+2, 3, 2), 0, GCornerNone);
-  // Main body rows 3-6
   graphics_fill_rect(ctx, GRect(ox+1, oy+3, 9, 4), 0, GCornerNone);
   graphics_fill_rect(ctx, GRect(ox+2, oy+2, 4, 1), 0, GCornerNone);
 }
 
-// Draw an 11x11 rain icon at (ox, oy) — cloud + drops
+static void draw_partly_cloudy_icon(GContext *ctx, int ox, int oy, GColor col) {
+  // Small sun top-right, cloud bottom-left
+  graphics_context_set_stroke_color(ctx, col);
+  graphics_context_set_stroke_width(ctx, 1);
+  graphics_draw_circle(ctx, GPoint(ox+7, oy+3), 2);
+  // short rays
+  graphics_draw_pixel(ctx, GPoint(ox+7, oy));
+  graphics_draw_pixel(ctx, GPoint(ox+10, oy+3));
+  graphics_draw_pixel(ctx, GPoint(ox+7, oy+6));
+  // cloud body
+  graphics_context_set_fill_color(ctx, col);
+  graphics_fill_rect(ctx, GRect(ox+1, oy+5, 7, 4), 0, GCornerNone);
+  graphics_fill_rect(ctx, GRect(ox+2, oy+4, 3, 1), 0, GCornerNone);
+  graphics_fill_rect(ctx, GRect(ox+5, oy+4, 2, 1), 0, GCornerNone);
+}
+
 static void draw_rain_icon(GContext *ctx, int ox, int oy, GColor col) {
   draw_cloud_icon(ctx, ox, oy-1, col);
   graphics_context_set_stroke_color(ctx, col);
-  // 3 rain drops
+  graphics_context_set_stroke_width(ctx, 1);
   graphics_draw_pixel(ctx, GPoint(ox+2, oy+7));
   graphics_draw_pixel(ctx, GPoint(ox+2, oy+9));
   graphics_draw_pixel(ctx, GPoint(ox+5, oy+8));
@@ -223,27 +255,49 @@ static void draw_rain_icon(GContext *ctx, int ox, int oy, GColor col) {
   graphics_draw_pixel(ctx, GPoint(ox+8, oy+9));
 }
 
-// Draw an 11x11 snow icon at (ox, oy) — asterisk
 static void draw_snow_icon(GContext *ctx, int ox, int oy, GColor col) {
   graphics_context_set_stroke_color(ctx, col);
+  graphics_context_set_stroke_width(ctx, 1);
   int cx = ox+5, cy = oy+5;
-  // Horizontal
   graphics_draw_line(ctx, GPoint(ox+1, cy), GPoint(ox+9, cy));
-  // Vertical
   graphics_draw_line(ctx, GPoint(cx, oy+1), GPoint(cx, oy+9));
-  // Diagonals
   graphics_draw_line(ctx, GPoint(ox+2, oy+2), GPoint(ox+8, oy+8));
   graphics_draw_line(ctx, GPoint(ox+8, oy+2), GPoint(ox+2, oy+8));
 }
 
+static void draw_storm_icon(GContext *ctx, int ox, int oy, GColor col) {
+  // Cloud top + lightning bolt
+  draw_cloud_icon(ctx, ox, oy-1, col);
+  graphics_context_set_fill_color(ctx, col);
+  // Lightning bolt: diagonal lines
+  graphics_draw_pixel(ctx, GPoint(ox+5, oy+6));
+  graphics_draw_pixel(ctx, GPoint(ox+5, oy+7));
+  graphics_draw_pixel(ctx, GPoint(ox+4, oy+7));
+  graphics_draw_pixel(ctx, GPoint(ox+4, oy+8));
+  graphics_draw_pixel(ctx, GPoint(ox+6, oy+8));
+  graphics_draw_pixel(ctx, GPoint(ox+6, oy+9));
+  graphics_draw_pixel(ctx, GPoint(ox+5, oy+9));
+  graphics_draw_pixel(ctx, GPoint(ox+5, oy+10));
+}
+
+static void draw_weather_icon(GContext *ctx, int ox, int oy, GColor col, int icon_type) {
+  switch (icon_type) {
+    case 0: draw_sun_icon(ctx, ox, oy, col);           break;
+    case 1: draw_partly_cloudy_icon(ctx, ox, oy, col); break;
+    case 2: draw_cloud_icon(ctx, ox, oy, col);         break;
+    case 3: draw_rain_icon(ctx, ox, oy, col);          break;
+    case 4: draw_snow_icon(ctx, ox, oy, col);          break;
+    case 5: draw_storm_icon(ctx, ox, oy, col);         break;
+    default: draw_cloud_icon(ctx, ox, oy, col);        break;
+  }
+}
+
 // ============================================================
 // OVERLAY FIELD DRAWING
-// Draws one field line at the given y position, centered on width w.
-// icon_x = cx - 6 for icon+text fields (icon 11px + 1px gap + text)
 // ============================================================
 static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor col) {
   if (field == FIELD_NONE) return;
-  int small_h = 11;  // cap height
+  int small_h = 11;
   GFont font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
 
   if (field == FIELD_DAY_LONG) {
@@ -262,9 +316,6 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor co
       GRect(0, y, w, small_h + 2),
       GTextOverflowModeFill, GTextAlignmentCenter, NULL);
   } else if (field == FIELD_STEPS) {
-    // Icon left of text, both centered as a unit
-    // Measure: icon=11px, gap=2px, text ~30px estimate → unit ~43px
-    // Center unit: icon_x = cx - 21, text_x = cx - 8
     int icon_x = cx - 21;
     int text_x = cx - 8;
     draw_steps_icon(ctx, icon_x, y, col);
@@ -273,15 +324,22 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor co
       GRect(text_x, y, w - text_x, small_h + 2),
       GTextOverflowModeFill, GTextAlignmentLeft, NULL);
   } else if (field == FIELD_TEMP) {
-    // Placeholder — weather API not yet implemented
-    // Show sun icon + "--" for now
-    int icon_x = cx - 18;
-    int text_x = cx - 5;
-    draw_sun_icon(ctx, icon_x, y, col);
-    graphics_context_set_text_color(ctx, col);
-    graphics_draw_text(ctx, "--", font,
-      GRect(text_x, y, w - text_x, small_h + 2),
-      GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+    if (s_weather_temp == INT_MIN) {
+      // Not yet received — show placeholder
+      graphics_context_set_text_color(ctx, col);
+      graphics_draw_text(ctx, "--", font,
+        GRect(0, y, w, small_h + 2),
+        GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+    } else {
+      int icon_type = weather_icon_for_code(s_weather_code);
+      int icon_x = cx - 21;
+      int text_x = cx - 8;
+      draw_weather_icon(ctx, icon_x, y, col, icon_type);
+      graphics_context_set_text_color(ctx, col);
+      graphics_draw_text(ctx, s_temp_buffer, font,
+        GRect(text_x, y, w - text_x, small_h + 2),
+        GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+    }
   }
 }
 
@@ -347,7 +405,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   int inner_short = (tick_rect.size.w < tick_rect.size.h)
                     ? tick_rect.size.w : tick_rect.size.h;
 
-  // rect: proportional tick depth; round: FULL fill, overlay circle is sole center control
   int tick_thick = inner_short;
 #if !defined(PBL_ROUND)
   if (s_settings.OverlayMode != OVERLAY_OFF) {
@@ -369,9 +426,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   // TICK MARKS
   // ----------------------------------------------------------
   if (!is_round) {
-    // ==== RECT PATH ====
-    // Color: draw solid block, cut gaps, overdraw tip in tip color.
-
     int filled_groups = s_minute / 5;
     int partial_min   = s_minute % 5;
 
@@ -557,9 +611,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   } else {
     // ==== ROUND PATH ====
-    // tick_thick = inner_short (full solid fill). Overlay circle = sole center control.
 
-    // -- Minutes --
     graphics_context_set_fill_color(ctx, col_dmin);
     for (int i = 0; i < 60; i++) {
       int a = 3 + 2*i + 5*(i/5);
@@ -584,7 +636,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       }
     }
 
-    // -- Hours --
     {
       bool is_24h = clock_is_24h_style();
       int filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
@@ -800,20 +851,12 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   // ----------------------------------------------------------
   // TEXT / FIELD OVERLAY
-  //
-  // Layout anchor: time centered on cy.
-  // Top/bottom each have 0, 1, or 2 active fields.
-  //
-  // 1 field:  gap=1px → 12px visual distance from time cap height
-  // 2 fields: inner gap=6px, outer gap=6px between lines
-  //           (6 + 11 + 6 = 23px from time to outer line top)
-  //
-  // font cap height = 11px, line slot height = 18px (includes descenders/spacing)
+  // 1 field: gap=1px (12px from time)
+  // 2 fields: inner 6px from time, outer 6px further
   // ----------------------------------------------------------
   if (prv_overlay_visible()) {
     int time_h  = 40;
-    int small_h = 18;  // line slot height for layout math
-    int cap_h   = 11;  // visual cap height of GOTHIC_18_BOLD
+    int cap_h   = 11;
 
     int time_y = cy - time_h / 2 - 2;
 
@@ -825,35 +868,29 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     int top_count = (top_inner != FIELD_NONE ? 1 : 0) + (top_outer != FIELD_NONE ? 1 : 0);
     int bot_count = (bot_inner != FIELD_NONE ? 1 : 0) + (bot_outer != FIELD_NONE ? 1 : 0);
 
-    // Draw time
+    // Time
     graphics_context_set_text_color(ctx, col_fg);
     graphics_draw_text(ctx, s_time_buffer,
       fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS),
       GRect(0, time_y, w, time_h + 4),
       GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
-    // TOP fields
+    // TOP
     if (top_count == 1) {
       int field = (top_inner != FIELD_NONE) ? top_inner : top_outer;
-      int y = time_y - cap_h - 1;  // 1px gap = 12px total
-      draw_field(ctx, field, y, w, cx, col_dfg);
+      draw_field(ctx, field, time_y - cap_h - 1, w, cx, col_dfg);
     } else if (top_count == 2) {
-      int inner_y = time_y - cap_h - 6;   // 6px gap from time
-      int outer_y = inner_y - cap_h - 6;  // 6px gap between lines
-      draw_field(ctx, top_inner, inner_y, w, cx, col_dfg);
-      draw_field(ctx, top_outer, outer_y, w, cx, col_dfg);
+      draw_field(ctx, top_inner, time_y - cap_h - 6,           w, cx, col_dfg);
+      draw_field(ctx, top_outer, time_y - cap_h - 6 - cap_h - 6, w, cx, col_dfg);
     }
 
-    // BOTTOM fields
+    // BOTTOM
     if (bot_count == 1) {
       int field = (bot_inner != FIELD_NONE) ? bot_inner : bot_outer;
-      int y = time_y + time_h + 1;  // 1px gap = 12px total
-      draw_field(ctx, field, y, w, cx, col_dfg);
+      draw_field(ctx, field, time_y + time_h + 1, w, cx, col_dfg);
     } else if (bot_count == 2) {
-      int inner_y = time_y + time_h + 6;          // 6px gap from time
-      int outer_y = inner_y + cap_h + 6;          // 6px gap between lines
-      draw_field(ctx, bot_inner, inner_y, w, cx, col_dfg);
-      draw_field(ctx, bot_outer, outer_y, w, cx, col_dfg);
+      draw_field(ctx, bot_inner, time_y + time_h + 6,             w, cx, col_dfg);
+      draw_field(ctx, bot_outer, time_y + time_h + 6 + cap_h + 6, w, cx, col_dfg);
     }
   }
 }
@@ -862,23 +899,20 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 // EVENT HANDLERS
 // ============================================================
 static void tick_handler(struct tm *t, TimeUnits units_changed) {
-  s_hour  = t->tm_hour;
+  s_hour   = t->tm_hour;
   s_minute = t->tm_min;
-  s_wday  = t->tm_wday;
-  s_mday  = t->tm_mday;
-  s_mon   = t->tm_mon;
+  s_wday   = t->tm_wday;
+  s_mday   = t->tm_mday;
+  s_mon    = t->tm_mon;
 
   int disp_hour = clock_is_24h_style() ? t->tm_hour : ((t->tm_hour % 12) ?: 12);
-  snprintf(s_time_buffer,    sizeof(s_time_buffer),    "%02d:%02d", disp_hour, t->tm_min);
-  snprintf(s_day_buffer,     sizeof(s_day_buffer),     "%s", get_day_name(t->tm_wday));
-  snprintf(s_date_buffer,    sizeof(s_date_buffer),    "%s %02d", get_month_abbr(t->tm_mon), t->tm_mday);
-  snprintf(s_day_date_buffer,sizeof(s_day_date_buffer),"%s %s %02d",
+  snprintf(s_time_buffer,     sizeof(s_time_buffer),     "%02d:%02d", disp_hour, t->tm_min);
+  snprintf(s_day_buffer,      sizeof(s_day_buffer),      "%s", get_day_name(t->tm_wday));
+  snprintf(s_date_buffer,     sizeof(s_date_buffer),     "%s %02d", get_month_abbr(t->tm_mon), t->tm_mday);
+  snprintf(s_day_date_buffer, sizeof(s_day_date_buffer), "%s %s %02d",
            s_short_days[t->tm_wday], get_month_abbr(t->tm_mon), t->tm_mday);
 
-  // Update steps buffer
-  if (s_steps >= 10000) {
-    snprintf(s_steps_buffer, sizeof(s_steps_buffer), "%d,%03d", s_steps/1000, s_steps%1000);
-  } else if (s_steps >= 1000) {
+  if (s_steps >= 1000) {
     snprintf(s_steps_buffer, sizeof(s_steps_buffer), "%d,%03d", s_steps/1000, s_steps%1000);
   } else {
     snprintf(s_steps_buffer, sizeof(s_steps_buffer), "%d", s_steps);
@@ -898,7 +932,6 @@ static void update_steps(void) {
     HealthMetricStepCount, time_start_of_today(), time(NULL));
   s_steps = (mask & HealthServiceAccessibilityMaskAvailable)
     ? (int)health_service_sum_today(HealthMetricStepCount) : 0;
-  // Refresh steps buffer
   if (s_steps >= 1000) {
     snprintf(s_steps_buffer, sizeof(s_steps_buffer), "%d,%03d", s_steps/1000, s_steps%1000);
   } else {
@@ -961,6 +994,16 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
   if (t) s_settings.BottomInnerField = (int)t->value->int32;
   t = dict_find(iter, MESSAGE_KEY_BottomOuterField);
   if (t) s_settings.BottomOuterField = (int)t->value->int32;
+
+  // Weather — sent from index.js, not config UI
+  t = dict_find(iter, MESSAGE_KEY_WeatherTemp);
+  if (t) {
+    s_weather_temp = (int)t->value->int32;
+    snprintf(s_temp_buffer, sizeof(s_temp_buffer), "%d\xC2\xB0", s_weather_temp);  // °
+  }
+  t = dict_find(iter, MESSAGE_KEY_WeatherCode);
+  if (t) s_weather_code = (int)t->value->int32;
+
   prv_save_settings();
   layer_mark_dirty(s_canvas_layer);
 }
@@ -992,6 +1035,10 @@ static void window_unload(Window *window) {
 static void init(void) {
   prv_load_settings();
   s_show_overlay = (s_settings.OverlayMode != OVERLAY_OFF);
+  s_weather_temp = INT_MIN;
+  s_weather_code = 0;
+  snprintf(s_steps_buffer, sizeof(s_steps_buffer), "0");
+  snprintf(s_temp_buffer,  sizeof(s_temp_buffer),  "--");
 
   s_window = window_create();
   window_set_window_handlers(s_window, (WindowHandlers){

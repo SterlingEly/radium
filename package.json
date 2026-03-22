@@ -6,7 +6,8 @@
     "pebble": {
         "capabilities": [
             "configurable",
-            "health"
+            "health",
+            "location"
         ],
         "displayName": "Radium 2",
         "enableMultiJS": true,
@@ -32,7 +33,9 @@
             "TopOuterField",
             "TopInnerField",
             "BottomInnerField",
-            "BottomOuterField"
+            "BottomOuterField",
+            "WeatherTemp",
+            "WeatherCode"
         ],
         "projectType": "native",
         "resources": {

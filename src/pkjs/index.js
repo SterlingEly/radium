@@ -1,5 +1,59 @@
 var Settings = require('./config');
 
+// ============================================================
+// WEATHER — Open-Meteo API (no key required, completely free)
+// Fetches current temp + WMO weather code from phone GPS.
+// Updates on load and every 30 minutes via tick.
+// ============================================================
+function fetchWeather() {
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      var lat = pos.coords.latitude;
+      var lon = pos.coords.longitude;
+      var url = 'https://api.open-meteo.com/v1/forecast'
+        + '?latitude=' + lat
+        + '&longitude=' + lon
+        + '&current=temperature_2m,weather_code'
+        + '&temperature_unit=fahrenheit'
+        + '&wind_speed_unit=mph'
+        + '&forecast_days=1';
+
+      var xhr = new XMLHttpRequest();
+      xhr.onload = function() {
+        try {
+          var data = JSON.parse(this.responseText);
+          var temp = Math.round(data.current.temperature_2m);
+          var code = data.current.weather_code;
+          Pebble.sendAppMessage({
+            WeatherTemp: temp,
+            WeatherCode: code
+          }, function() {
+            console.log('Weather sent: ' + temp + 'F, code ' + code);
+          }, function(e) {
+            console.log('Weather send error: ' + e.error.message);
+          });
+        } catch(err) {
+          console.log('Weather parse error: ' + err);
+        }
+      };
+      xhr.open('GET', url);
+      xhr.send();
+    },
+    function(err) {
+      console.log('Geolocation error: ' + err.message);
+    },
+    { timeout: 15000, maximumAge: 300000 }
+  );
+}
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+Pebble.addEventListener('ready', function() {
+  console.log('PebbleKit JS ready');
+  fetchWeather();
+});
+
 Pebble.addEventListener('showConfiguration', function() {
   var platform = 'color';
   try {
@@ -24,3 +78,6 @@ Pebble.addEventListener('webviewclosed', function(e) {
     });
   }
 });
+
+// Refresh weather every 30 minutes
+setInterval(fetchWeather, 30 * 60 * 1000);
