@@ -3,7 +3,7 @@
 // ============================================================
 // CONSTANTS
 // ============================================================
-#define SETTINGS_KEY      4    // bumped: added 4 modular field settings
+#define SETTINGS_KEY      4
 #define DEFAULT_STEP_GOAL 10000
 #define RING_GAP          2
 #define RING_THICK        6
@@ -18,17 +18,12 @@
 #define FIELD_DATE      2  // "MAR 21"
 #define FIELD_DAY_DATE  3  // "SAT MAR 21"
 #define FIELD_STEPS     4  // steps icon + count
-#define FIELD_TEMP      5  // weather icon + temp
+#define FIELD_TEMP_F    5  // weather icon + temp in °F
+#define FIELD_TEMP_C    6  // weather icon + temp in °C
 
-// WMO weather code groups
-// 0        = clear
-// 1-3      = partly cloudy
-// 45,48    = fog
-// 51-67    = drizzle/rain
-// 71-77    = snow
-// 80-82    = rain showers
-// 85-86    = snow showers
-// 95-99    = thunderstorm
+// WMO weather code groups -> icon type:
+// 0=clear, 1-3=partly cloudy, 45-48=fog/cloud,
+// 51-67,80-82=rain, 71-77,85-86=snow, 95-99=storm
 
 static const char *s_short_days[] = {
   "SUN","MON","TUE","WED","THU","FRI","SAT"
@@ -128,16 +123,18 @@ static int  s_battery = 100;
 static int  s_steps   = 0;
 static bool s_show_overlay = true;
 
-// Weather state — updated by index.js via AppMessage
-static int  s_weather_temp = INT_MIN;  // INT_MIN = not yet received
-static int  s_weather_code = 0;
+// Weather state — both units stored, INT_MIN = not yet received
+static int  s_weather_temp_f = INT_MIN;
+static int  s_weather_temp_c = INT_MIN;
+static int  s_weather_code   = 0;
 
 static char s_time_buffer[8];
 static char s_day_buffer[12];
 static char s_date_buffer[10];
 static char s_day_date_buffer[14];
 static char s_steps_buffer[8];
-static char s_temp_buffer[8];   // e.g. "72°F"
+static char s_temp_f_buffer[8];  // e.g. "72°"
+static char s_temp_c_buffer[8];  // e.g. "22°"
 
 static GPoint    s_tri_pts[3];
 static GPathInfo s_tri_info = { .num_points = 3, .points = s_tri_pts };
@@ -177,18 +174,18 @@ static void draw_wedge(GContext *ctx, int cx, int cy, int radius,
 
 // ============================================================
 // WEATHER CODE -> ICON TYPE
-// Returns: 0=sun, 1=partly cloudy, 2=cloud, 3=rain, 4=snow, 5=storm
+// 0=sun, 1=partly cloudy, 2=cloud, 3=rain, 4=snow, 5=storm
 // ============================================================
 static int weather_icon_for_code(int code) {
-  if (code == 0)                                  return 0;  // clear
-  if (code >= 1  && code <= 3)                    return 1;  // partly cloudy
-  if (code >= 45 && code <= 48)                   return 2;  // fog/cloud
+  if (code == 0)                                return 0;
+  if (code >= 1  && code <= 3)                  return 1;
+  if (code >= 45 && code <= 48)                 return 2;
   if ((code >= 51 && code <= 67) ||
-      (code >= 80 && code <= 82))                 return 3;  // rain
+      (code >= 80 && code <= 82))               return 3;
   if ((code >= 71 && code <= 77) ||
-      (code >= 85 && code <= 86))                 return 4;  // snow
-  if (code >= 95 && code <= 99)                   return 5;  // storm
-  return 2;  // default: cloud
+      (code >= 85 && code <= 86))               return 4;
+  if (code >= 95 && code <= 99)                 return 5;
+  return 2;
 }
 
 // ============================================================
@@ -228,15 +225,12 @@ static void draw_cloud_icon(GContext *ctx, int ox, int oy, GColor col) {
 }
 
 static void draw_partly_cloudy_icon(GContext *ctx, int ox, int oy, GColor col) {
-  // Small sun top-right, cloud bottom-left
   graphics_context_set_stroke_color(ctx, col);
   graphics_context_set_stroke_width(ctx, 1);
   graphics_draw_circle(ctx, GPoint(ox+7, oy+3), 2);
-  // short rays
   graphics_draw_pixel(ctx, GPoint(ox+7, oy));
   graphics_draw_pixel(ctx, GPoint(ox+10, oy+3));
   graphics_draw_pixel(ctx, GPoint(ox+7, oy+6));
-  // cloud body
   graphics_context_set_fill_color(ctx, col);
   graphics_fill_rect(ctx, GRect(ox+1, oy+5, 7, 4), 0, GCornerNone);
   graphics_fill_rect(ctx, GRect(ox+2, oy+4, 3, 1), 0, GCornerNone);
@@ -266,10 +260,9 @@ static void draw_snow_icon(GContext *ctx, int ox, int oy, GColor col) {
 }
 
 static void draw_storm_icon(GContext *ctx, int ox, int oy, GColor col) {
-  // Cloud top + lightning bolt
   draw_cloud_icon(ctx, ox, oy-1, col);
-  graphics_context_set_fill_color(ctx, col);
-  // Lightning bolt: diagonal lines
+  graphics_context_set_stroke_color(ctx, col);
+  graphics_context_set_stroke_width(ctx, 1);
   graphics_draw_pixel(ctx, GPoint(ox+5, oy+6));
   graphics_draw_pixel(ctx, GPoint(ox+5, oy+7));
   graphics_draw_pixel(ctx, GPoint(ox+4, oy+7));
@@ -303,42 +296,39 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor co
   if (field == FIELD_DAY_LONG) {
     graphics_context_set_text_color(ctx, col);
     graphics_draw_text(ctx, s_day_buffer, font,
-      GRect(0, y, w, small_h + 2),
-      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+      GRect(0, y, w, small_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
   } else if (field == FIELD_DATE) {
     graphics_context_set_text_color(ctx, col);
     graphics_draw_text(ctx, s_date_buffer, font,
-      GRect(0, y, w, small_h + 2),
-      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+      GRect(0, y, w, small_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
   } else if (field == FIELD_DAY_DATE) {
     graphics_context_set_text_color(ctx, col);
     graphics_draw_text(ctx, s_day_date_buffer, font,
-      GRect(0, y, w, small_h + 2),
-      GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+      GRect(0, y, w, small_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
   } else if (field == FIELD_STEPS) {
     int icon_x = cx - 21;
     int text_x = cx - 8;
     draw_steps_icon(ctx, icon_x, y, col);
     graphics_context_set_text_color(ctx, col);
     graphics_draw_text(ctx, s_steps_buffer, font,
-      GRect(text_x, y, w - text_x, small_h + 2),
-      GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-  } else if (field == FIELD_TEMP) {
-    if (s_weather_temp == INT_MIN) {
-      // Not yet received — show placeholder
+      GRect(text_x, y, w - text_x, small_h + 2), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+  } else if (field == FIELD_TEMP_F || field == FIELD_TEMP_C) {
+    bool is_f   = (field == FIELD_TEMP_F);
+    bool ready  = is_f ? (s_weather_temp_f != INT_MIN) : (s_weather_temp_c != INT_MIN);
+    char *tbuf  = is_f ? s_temp_f_buffer : s_temp_c_buffer;
+    if (!ready) {
+      // Not yet received
       graphics_context_set_text_color(ctx, col);
       graphics_draw_text(ctx, "--", font,
-        GRect(0, y, w, small_h + 2),
-        GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+        GRect(0, y, w, small_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
     } else {
       int icon_type = weather_icon_for_code(s_weather_code);
       int icon_x = cx - 21;
       int text_x = cx - 8;
       draw_weather_icon(ctx, icon_x, y, col, icon_type);
       graphics_context_set_text_color(ctx, col);
-      graphics_draw_text(ctx, s_temp_buffer, font,
-        GRect(text_x, y, w - text_x, small_h + 2),
-        GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+      graphics_draw_text(ctx, tbuf, font,
+        GRect(text_x, y, w - text_x, small_h + 2), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
     }
   }
 }
@@ -433,7 +423,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     int  min_tip_group = (partial_min > 0) ? filled_groups   : filled_groups - 1;
     int  min_tip_tick  = (partial_min > 0) ? partial_min - 1 : 4;
 
-    // -- Minutes: empty tracks --
     graphics_context_set_fill_color(ctx, col_dmin);
     graphics_context_set_stroke_color(ctx, col_dmin);
     for (int g = filled_groups + (partial_min > 0 ? 1 : 0); g < 12; g++) {
@@ -452,7 +441,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 #endif
 
-    // -- Minutes: filled complete groups --
     for (int g = 0; g < filled_groups; g++) {
       int a = 3 + 15*g;
       bool group_has_tip = has_min_tip && (g == min_tip_group);
@@ -475,7 +463,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 #endif
     }
 
-    // -- Minutes: partial group --
     if (partial_min > 0) {
       int a = 3 + 15*filled_groups;
       graphics_context_set_fill_color(ctx, col_dmin);
@@ -506,7 +493,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 #endif
     }
 
-    // -- Hours --
     bool is_24h = clock_is_24h_style();
     int filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
     int filled_half  = s_hour % 2;
@@ -851,12 +837,12 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   // ----------------------------------------------------------
   // TEXT / FIELD OVERLAY
-  // 1 field: gap=1px (12px from time)
+  // 1 field: gap=1px (12px visual from time cap height)
   // 2 fields: inner 6px from time, outer 6px further
   // ----------------------------------------------------------
   if (prv_overlay_visible()) {
-    int time_h  = 40;
-    int cap_h   = 11;
+    int time_h = 40;
+    int cap_h  = 11;
 
     int time_y = cy - time_h / 2 - 2;
 
@@ -868,29 +854,26 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     int top_count = (top_inner != FIELD_NONE ? 1 : 0) + (top_outer != FIELD_NONE ? 1 : 0);
     int bot_count = (bot_inner != FIELD_NONE ? 1 : 0) + (bot_outer != FIELD_NONE ? 1 : 0);
 
-    // Time
     graphics_context_set_text_color(ctx, col_fg);
     graphics_draw_text(ctx, s_time_buffer,
       fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS),
       GRect(0, time_y, w, time_h + 4),
       GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
-    // TOP
     if (top_count == 1) {
       int field = (top_inner != FIELD_NONE) ? top_inner : top_outer;
       draw_field(ctx, field, time_y - cap_h - 1, w, cx, col_dfg);
     } else if (top_count == 2) {
-      draw_field(ctx, top_inner, time_y - cap_h - 6,           w, cx, col_dfg);
-      draw_field(ctx, top_outer, time_y - cap_h - 6 - cap_h - 6, w, cx, col_dfg);
+      draw_field(ctx, top_inner, time_y - cap_h - 6,                w, cx, col_dfg);
+      draw_field(ctx, top_outer, time_y - cap_h - 6 - cap_h - 6,   w, cx, col_dfg);
     }
 
-    // BOTTOM
     if (bot_count == 1) {
       int field = (bot_inner != FIELD_NONE) ? bot_inner : bot_outer;
       draw_field(ctx, field, time_y + time_h + 1, w, cx, col_dfg);
     } else if (bot_count == 2) {
-      draw_field(ctx, bot_inner, time_y + time_h + 6,             w, cx, col_dfg);
-      draw_field(ctx, bot_outer, time_y + time_h + 6 + cap_h + 6, w, cx, col_dfg);
+      draw_field(ctx, bot_inner, time_y + time_h + 6,              w, cx, col_dfg);
+      draw_field(ctx, bot_outer, time_y + time_h + 6 + cap_h + 6,  w, cx, col_dfg);
     }
   }
 }
@@ -995,11 +978,16 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
   t = dict_find(iter, MESSAGE_KEY_BottomOuterField);
   if (t) s_settings.BottomOuterField = (int)t->value->int32;
 
-  // Weather — sent from index.js, not config UI
-  t = dict_find(iter, MESSAGE_KEY_WeatherTemp);
+  // Weather — sent by index.js, not config UI
+  t = dict_find(iter, MESSAGE_KEY_WeatherTempF);
   if (t) {
-    s_weather_temp = (int)t->value->int32;
-    snprintf(s_temp_buffer, sizeof(s_temp_buffer), "%d\xC2\xB0", s_weather_temp);  // °
+    s_weather_temp_f = (int)t->value->int32;
+    snprintf(s_temp_f_buffer, sizeof(s_temp_f_buffer), "%d\xC2\xB0", s_weather_temp_f);
+  }
+  t = dict_find(iter, MESSAGE_KEY_WeatherTempC);
+  if (t) {
+    s_weather_temp_c = (int)t->value->int32;
+    snprintf(s_temp_c_buffer, sizeof(s_temp_c_buffer), "%d\xC2\xB0", s_weather_temp_c);
   }
   t = dict_find(iter, MESSAGE_KEY_WeatherCode);
   if (t) s_weather_code = (int)t->value->int32;
@@ -1034,11 +1022,13 @@ static void window_unload(Window *window) {
 
 static void init(void) {
   prv_load_settings();
-  s_show_overlay = (s_settings.OverlayMode != OVERLAY_OFF);
-  s_weather_temp = INT_MIN;
-  s_weather_code = 0;
-  snprintf(s_steps_buffer, sizeof(s_steps_buffer), "0");
-  snprintf(s_temp_buffer,  sizeof(s_temp_buffer),  "--");
+  s_show_overlay   = (s_settings.OverlayMode != OVERLAY_OFF);
+  s_weather_temp_f = INT_MIN;
+  s_weather_temp_c = INT_MIN;
+  s_weather_code   = 0;
+  snprintf(s_steps_buffer,  sizeof(s_steps_buffer),  "0");
+  snprintf(s_temp_f_buffer, sizeof(s_temp_f_buffer),  "--");
+  snprintf(s_temp_c_buffer, sizeof(s_temp_c_buffer),  "--");
 
   s_window = window_create();
   window_set_window_handlers(s_window, (WindowHandlers){

@@ -2,33 +2,36 @@ var Settings = require('./config');
 
 // ============================================================
 // WEATHER — Open-Meteo API (no key required, completely free)
-// Fetches current temp + WMO weather code from phone GPS.
-// Updates on load and every 30 minutes via tick.
+// Fetches current temp in both F and C + WMO weather code.
+// Updates on load and every 30 minutes via setInterval.
 // ============================================================
 function fetchWeather() {
   navigator.geolocation.getCurrentPosition(
     function(pos) {
       var lat = pos.coords.latitude;
       var lon = pos.coords.longitude;
+      // Request both F and C in one call using two temperature_unit params
+      // Open-Meteo doesn't support dual units, so we fetch once and convert
       var url = 'https://api.open-meteo.com/v1/forecast'
         + '?latitude=' + lat
         + '&longitude=' + lon
         + '&current=temperature_2m,weather_code'
-        + '&temperature_unit=fahrenheit'
-        + '&wind_speed_unit=mph'
+        + '&temperature_unit=celsius'
         + '&forecast_days=1';
 
       var xhr = new XMLHttpRequest();
       xhr.onload = function() {
         try {
           var data = JSON.parse(this.responseText);
-          var temp = Math.round(data.current.temperature_2m);
-          var code = data.current.weather_code;
+          var tempC = Math.round(data.current.temperature_2m);
+          var tempF = Math.round(tempC * 9 / 5 + 32);
+          var code  = data.current.weather_code;
           Pebble.sendAppMessage({
-            WeatherTemp: temp,
-            WeatherCode: code
+            WeatherTempF: tempF,
+            WeatherTempC: tempC,
+            WeatherCode:  code
           }, function() {
-            console.log('Weather sent: ' + temp + 'F, code ' + code);
+            console.log('Weather sent: ' + tempF + 'F / ' + tempC + 'C, code ' + code);
           }, function(e) {
             console.log('Weather send error: ' + e.error.message);
           });

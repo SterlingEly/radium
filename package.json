@@ -34,7 +34,8 @@
             "TopInnerField",
             "BottomInnerField",
             "BottomOuterField",
-            "WeatherTemp",
+            "WeatherTempF",
+            "WeatherTempC",
             "WeatherCode"
         ],
         "projectType": "native",
