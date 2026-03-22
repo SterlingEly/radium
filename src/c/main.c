@@ -205,25 +205,28 @@ static int weather_icon_for_code(int code) {
 #define ICON_LEFT     (-16)
 #define TEXT_LEFT     (-3)
 
-// draw_footprint: peanut-shaped footprint at (fx, fy), 5x7px
-// The shape has a wide rounded toe end and narrower pinched heel.
-// Built from: full rounded rect + background cut on heel corners.
-static void draw_footprint(GContext *ctx, int fx, int fy, GColor col, GColor bg) {
-  // Fill the full 5x7 rounded body
+// draw_footprint: peanut-shaped footprint at (fx, fy) within 5x11px space.
+// Two distinct ovals: wide rounded toe ball (top, 5x5) pinching into a
+// narrower heel (bottom, 3x4), overlapping by 1px to join seamlessly.
+//   Toe ball:  5x5, radius 2, at (fx,   fy)     — rows 0-4
+//   Heel:      3x4, radius 1, at (fx+1, fy+4)   — rows 4-7
+// Total height: ~8px, fits comfortably in 11px icon slot.
+static void draw_footprint(GContext *ctx, int fx, int fy, GColor col) {
   graphics_context_set_fill_color(ctx, col);
-  graphics_fill_rect(ctx, GRect(fx, fy, 5, 7), 2, GCornersAll);
-  // Pinch the heel (bottom 2 rows, inner 1px each side) to create waist
-  graphics_context_set_fill_color(ctx, bg);
-  graphics_fill_rect(ctx, GRect(fx,   fy+5, 1, 2), 0, GCornerNone);
-  graphics_fill_rect(ctx, GRect(fx+4, fy+5, 1, 2), 0, GCornerNone);
+  // Toe ball: wide rounded oval
+  graphics_fill_rect(ctx, GRect(fx, fy, 5, 5), 2, GCornersAll);
+  // Heel: narrower rounded rect, starts 1px into toe overlap for continuity
+  graphics_fill_rect(ctx, GRect(fx+1, fy+4, 3, 4), 1, GCornersAll);
 }
 
-// Steps: two offset peanut footprints (right foot higher, left foot lower)
-static void draw_steps_icon(GContext *ctx, int ox, int oy, GColor col, GColor bg) {
-  // Right foot: higher (toe-forward), positioned upper-right
-  draw_footprint(ctx, ox+5, oy+0, col, bg);
-  // Left foot: lower (back foot), positioned lower-left
-  draw_footprint(ctx, ox+0, oy+4, col, bg);
+// Steps: two peanut footprints, diagonally offset like a walking stride.
+// Right foot: upper position (toe-forward, mid-stride)
+// Left foot:  lower position (pushing off behind)
+static void draw_steps_icon(GContext *ctx, int ox, int oy, GColor col) {
+  // Right foot: upper-right
+  draw_footprint(ctx, ox+5, oy+0, col);
+  // Left foot: lower-left, 4px down
+  draw_footprint(ctx, ox+0, oy+3, col);
 }
 
 // Battery: outline rect with fill level + nub
@@ -349,7 +352,7 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor co
       GRect(0, y, w, 13), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
   } else if (field == FIELD_STEPS) {
-    draw_steps_icon(ctx, icon_x, iy, col, bg);
+    draw_steps_icon(ctx, icon_x, iy, col);
     graphics_draw_text(ctx, s_steps_buffer, font,
       GRect(text_x, y, text_w, 13), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 
