@@ -131,10 +131,10 @@ static char s_time_buffer[8];
 static char s_day_buffer[12];
 static char s_date_buffer[10];
 static char s_day_date_buffer[14];
-static char s_steps_buffer[8];
-static char s_battery_buffer[6];  // e.g. "72%"
-static char s_temp_f_buffer[8];   // e.g. "72\xB0F"
-static char s_temp_c_buffer[8];   // e.g. "22\xB0C"
+static char s_steps_buffer[12];  // "99,999" max = 6 chars + null; 12 for safety
+static char s_battery_buffer[6]; // e.g. "72%"
+static char s_temp_f_buffer[8];  // e.g. "72°F"
+static char s_temp_c_buffer[8];  // e.g. "22°C"
 
 static GPoint    s_tri_pts[3];
 static GPathInfo s_tri_info = { .num_points = 3, .points = s_tri_pts };
@@ -440,20 +440,10 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   // ----------------------------------------------------------
   if (!is_round) {
     // ==== RECT MINUTES ====
-    //
-    // Minutes are grouped into 12 groups of 5.
-    // Pass 1: dim all empty groups
-    // Pass 2: lit all filled complete groups + partial lit ticks
-    // Pass 3 (color): re-draw tip tick in col_min_tip
-    //
-    // On color, gap cuts are applied after each group to separate ticks.
 
     int filled_groups = s_minute / 5;
     int partial_min   = s_minute % 5;
 
-    // Tip tick position (the leading lit minute tick):
-    //   If partial group exists: last lit tick in partial group
-    //   Else: last tick in last complete group
     int tip_deg = 0;
     if (s_minute > 0) {
       tip_deg = (partial_min > 0)
@@ -461,7 +451,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
         : 3 + 15*(filled_groups - 1) + 2*4;
     }
 
-    // Pass 1a: Dim all groups that are not yet reached
+    // Pass 1: Dim empty groups
     int first_empty = filled_groups + (partial_min > 0 ? 1 : 0);
     graphics_context_set_fill_color(ctx, col_dmin);
     for (int g = first_empty; g < 12; g++) {
@@ -469,7 +459,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
     }
 #if defined(PBL_COLOR)
-    // Dim gap cuts on empty groups
     graphics_context_set_fill_color(ctx, col_bg);
     for (int g = first_empty; g < 12; g++) {
       int a = 3 + 15*g;
@@ -480,14 +469,13 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 #endif
 
-    // Pass 2a: Lit all complete groups
+    // Pass 2: Lit complete groups
     graphics_context_set_fill_color(ctx, col_min);
     for (int g = 0; g < filled_groups; g++) {
       int a = 3 + 15*g;
       draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
     }
 #if defined(PBL_COLOR)
-    // Lit gap cuts on complete groups
     graphics_context_set_fill_color(ctx, col_bg);
     for (int g = 0; g < filled_groups; g++) {
       int a = 3 + 15*g;
@@ -498,7 +486,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 #endif
 
-    // Pass 2b: Partial group — dim base, then lit ticks on top
+    // Pass 2b: Partial group
     if (partial_min > 0) {
       int a = 3 + 15*filled_groups;
       graphics_context_set_fill_color(ctx, col_dmin);
@@ -515,7 +503,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
         draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(ta), DEG_TO_TRIGANGLE(ta + 1));
       }
 #else
-      // B&W: draw partial ticks as full 2-deg wedges (no gap cuts needed)
       graphics_context_set_fill_color(ctx, col_min);
       for (int i = 0; i < partial_min; i++) {
         int ta = a + 2*i;
@@ -525,7 +512,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 
 #if defined(PBL_COLOR)
-    // Pass 3: Tip tick highlight (color only) — recolors the leading tick
+    // Pass 3: Tip minute highlight
     if (s_minute > 0) {
       graphics_context_set_fill_color(ctx, col_min_tip);
       draw_wedge(ctx, cx, cy, radius,
@@ -534,25 +521,11 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 #endif
 
     // ==== RECT HOURS ====
-    //
-    // Pass 1: Dim all 12 hour slots
-    // Pass 2: Lit ALL filled slots (full count — fixes B&W missing tip hour)
-    // Pass 3 (color): Re-draw tip slot in col_hour_tip
-    //
-    // For 24h mode each slot shows 2 hours via two sub-ticks with a gap between.
-    // filled_slots = number of fully lit slots
-    // filled_half  = whether the current slot is half-lit (24h only)
-    // hour_tip_slot = index of the leading/active slot to highlight (color only)
 
-    bool is_24h      = clock_is_24h_style();
+    bool is_24h       = clock_is_24h_style();
     int  filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
     int  filled_half  = s_hour % 2;
 
-    // hour_tip_slot: the slot to highlight in color
-    // In 12h: always the last filled slot (filled_slots - 1)
-    // In 24h: if on an odd hour (filled_half==1), the next slot (filled_slots)
-    //         shows one sub-tick lit, so that becomes the tip slot.
-    //         Otherwise the last complete slot (filled_slots - 1) is the tip.
     int hour_tip_slot;
     if (!is_24h) {
       hour_tip_slot = (filled_slots > 0) ? (filled_slots - 1) : 0;
@@ -567,13 +540,11 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
     }
 #if defined(PBL_COLOR)
-    // Dim separator gaps
     graphics_context_set_fill_color(ctx, col_bg);
     for (int h2 = 0; h2 < 12; h2++) {
       int a = 183 + 15*h2;
       draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 9), DEG_TO_TRIGANGLE(a + 10));
     }
-    // 24h middle gaps (cut dim slots in half)
     if (is_24h) {
       for (int h2 = 0; h2 < 12; h2++) {
         int a = 183 + 15*h2 + 3;
@@ -582,7 +553,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 #endif
 
-    // Pass 2: Lit ALL filled slots (including tip slot — critical for B&W)
+    // Pass 2: Lit ALL filled slots (full count — fixes B&W)
     if (!is_24h) {
       graphics_context_set_fill_color(ctx, col_hour);
       for (int h2 = 0; h2 < filled_slots; h2++) {
@@ -590,14 +561,12 @@ static void draw_layer(Layer *layer, GContext *ctx) {
         draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
       }
     } else {
-      // 24h: each complete slot gets two sub-ticks
       graphics_context_set_fill_color(ctx, col_hour);
       for (int h2 = 0; h2 < filled_slots; h2++) {
         int a = 183 + 15*h2;
         draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a),     DEG_TO_TRIGANGLE(a + 3));
         draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
       }
-      // Partial slot: only first sub-tick if on an odd hour
       if (filled_half == 1 && filled_slots < 12) {
         int a = 183 + 15*filled_slots;
         draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
@@ -605,8 +574,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 
 #if defined(PBL_COLOR)
-    // Pass 3: Tip slot highlight (color only)
-    // Re-draw just the leading/active slot in col_hour_tip
+    // Pass 3: Tip hour highlight
     if (s_hour > 0 || is_24h) {
       if (!is_24h && filled_slots > 0) {
         graphics_context_set_fill_color(ctx, col_hour_tip);
@@ -615,11 +583,9 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       } else if (is_24h) {
         int a = 183 + 15*hour_tip_slot;
         if (filled_half == 1) {
-          // Odd hour: only first sub-tick of tip slot is lit
           graphics_context_set_fill_color(ctx, col_hour_tip);
           draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
         } else if (filled_slots > 0) {
-          // Even hour: both sub-ticks of tip slot lit, second gets tip color
           graphics_context_set_fill_color(ctx, col_hour);
           draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a),     DEG_TO_TRIGANGLE(a + 3));
           graphics_context_set_fill_color(ctx, col_hour_tip);
@@ -628,13 +594,12 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       }
     }
 
-    // Restore gap cuts over lit area (separator + 24h middle gaps)
+    // Restore separator gaps over lit area
     graphics_context_set_fill_color(ctx, col_bg);
     for (int h2 = 0; h2 < filled_slots && h2 < 12; h2++) {
       int a = 183 + 15*h2;
       draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 9), DEG_TO_TRIGANGLE(a + 10));
     }
-    // Include tip slot gap too
     if (filled_slots > 0) {
       int tip_a = 183 + 15*(filled_slots - 1);
       draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(tip_a + 9), DEG_TO_TRIGANGLE(tip_a + 10));
@@ -650,8 +615,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   } else {
     // ==== ROUND PATH ====
-    //
-    // Same philosophy: draw all lit ticks first (full count), then color tip on top.
 
     // Pass 1: Dim all 60 minute ticks
     graphics_context_set_fill_color(ctx, col_dmin);
@@ -661,7 +624,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
                            DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 1));
     }
 
-    // Pass 2: Lit ALL filled minute ticks (full count including tip)
+    // Pass 2: Lit ALL filled minute ticks (full count)
     if (s_minute > 0) {
       graphics_context_set_fill_color(ctx, col_min);
       for (int i = 0; i < s_minute; i++) {
@@ -670,7 +633,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
                              DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 1));
       }
 #if defined(PBL_COLOR)
-      // Pass 3: Tip minute tick highlight
+      // Pass 3: Tip minute highlight
       graphics_context_set_fill_color(ctx, col_min_tip);
       {
         int i = s_minute - 1;
@@ -682,7 +645,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 
     {
-      bool is_24h      = clock_is_24h_style();
+      bool is_24h       = clock_is_24h_style();
       int  filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
       int  filled_half  = s_hour % 2;
       int  hour_tip_slot = (filled_half == 1) ? filled_slots : (filled_slots > 0 ? filled_slots - 1 : 0);
@@ -694,7 +657,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
         graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                              DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
       }
-      // 24h middle gaps on dim
       if (is_24h) {
         graphics_context_set_fill_color(ctx, col_bg);
         for (int h2 = 0; h2 < 12; h2++) {
@@ -721,13 +683,11 @@ static void draw_layer(Layer *layer, GContext *ctx) {
           graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                                DEG_TO_TRIGANGLE(a + 6), DEG_TO_TRIGANGLE(a + 9));
         }
-        // Partial 24h slot (odd hour)
         if (filled_half == 1 && filled_slots < 12) {
           int a = 183 + 15*filled_slots;
           graphics_fill_radial(ctx, tick_rect, GOvalScaleModeFitCircle, tick_thick,
                                DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 3));
         }
-        // Restore 24h middle gaps over lit area
         graphics_context_set_fill_color(ctx, col_bg);
         int cut_to = (filled_half == 1) ? filled_slots + 1 : filled_slots;
         for (int h2 = 0; h2 < cut_to && h2 < 12; h2++) {
@@ -738,7 +698,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       }
 
 #if defined(PBL_COLOR)
-      // Pass 3: Tip hour slot highlight (color only)
+      // Pass 3: Tip hour highlight
       if (!is_24h) {
         if (filled_slots > 0) {
           graphics_context_set_fill_color(ctx, col_hour_tip);
@@ -893,14 +853,12 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     int top_count = (top_inner ? 1 : 0) + (top_outer ? 1 : 0);
     int bot_count = (bot_inner ? 1 : 0) + (bot_outer ? 1 : 0);
 
-    // Time
     graphics_context_set_text_color(ctx, col_fg);
     graphics_draw_text(ctx, s_time_buffer,
       fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS),
       GRect(0, time_y, w, time_h + 4),
       GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
-    // Top fields
     if (top_count == 1) {
       int field = top_inner ? top_inner : top_outer;
       draw_field(ctx, field, time_y - 20, w, cx, col_dfg, col_obg);
@@ -911,7 +869,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       draw_field(ctx, top_outer, outer_y, w, cx, col_dfg, col_obg);
     }
 
-    // Bottom fields
     if (bot_count == 1) {
       int field = bot_inner ? bot_inner : bot_outer;
       draw_field(ctx, field, time_y + time_h + 2, w, cx, col_dfg, col_obg);
@@ -1022,12 +979,14 @@ static void inbox_received(DictionaryIterator *iter, void *context) {
   t = dict_find(iter, MESSAGE_KEY_WeatherTempF);
   if (t) {
     s_weather_temp_f = (int)t->value->int32;
-    snprintf(s_temp_f_buffer, sizeof(s_temp_f_buffer), "%d\xB0F", s_weather_temp_f);
+    // \xB0 is the degree symbol; split string literal to prevent
+    // the compiler reading \xB0F as a 3-digit hex escape (out of range)
+    snprintf(s_temp_f_buffer, sizeof(s_temp_f_buffer), "%d\xB0" "F", s_weather_temp_f);
   }
   t = dict_find(iter, MESSAGE_KEY_WeatherTempC);
   if (t) {
     s_weather_temp_c = (int)t->value->int32;
-    snprintf(s_temp_c_buffer, sizeof(s_temp_c_buffer), "%d\xB0C", s_weather_temp_c);
+    snprintf(s_temp_c_buffer, sizeof(s_temp_c_buffer), "%d\xB0" "C", s_weather_temp_c);
   }
   t = dict_find(iter, MESSAGE_KEY_WeatherCode);
   if (t) s_weather_code = (int)t->value->int32;
