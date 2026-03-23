@@ -304,9 +304,10 @@ static void draw_weather_icon(GContext *ctx, int ox, int oy, GColor col, int ico
 // ============================================================
 // OVERLAY FIELD DRAWING
 //
-// Steps and battery use dynamic centering via text measurement.
-// Weather uses fixed offsets (avoids any issue measuring strings
-// containing the degree character).
+// All icon+text fields use dynamic centering:
+//   text width is measured, unit_w = ICON_W + ICON_TEXT_GAP + text_w,
+//   icon_x = cx - unit_w/2, text_x = icon_x + ICON_W + ICON_TEXT_GAP.
+// Weather strings are plain ASCII ("72F", "22C") so measurement is safe.
 // ============================================================
 static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor col, GColor bg) {
   if (field == FIELD_NONE) return;
@@ -329,7 +330,6 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor co
       GRect(0, y, w, 13), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
   } else if (field == FIELD_STEPS) {
-    // Dynamic centering: measure text width, center icon+text unit on cx
     GSize text_size = graphics_text_layout_get_content_size(
       s_steps_buffer, font, GRect(0, 0, 200, 20),
       GTextOverflowModeFill, GTextAlignmentLeft);
@@ -341,7 +341,6 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor co
       GRect(text_x, y, w - text_x, 13), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 
   } else if (field == FIELD_BATTERY) {
-    // Dynamic centering: measure text width, center icon+text unit on cx
     GSize text_size = graphics_text_layout_get_content_size(
       s_battery_buffer, font, GRect(0, 0, 200, 20),
       GTextOverflowModeFill, GTextAlignmentLeft);
@@ -360,9 +359,12 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx, GColor co
         GRect(0, y, w, 13), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
     } else {
       const char *temp_str = is_f ? s_temp_f_buffer : s_temp_c_buffer;
-      // Fixed centering for weather: icon(11) + gap(2) + text(~32px max) = ~45px.
-      // icon_x = cx - 23 centers the ~45px unit on cx (nudged +2px right vs cx-25).
-      int icon_x = cx - 23;
+      // Dynamic centering: temp strings are plain ASCII so measurement is reliable.
+      GSize text_size = graphics_text_layout_get_content_size(
+        temp_str, font, GRect(0, 0, 200, 20),
+        GTextOverflowModeFill, GTextAlignmentLeft);
+      int unit_w = ICON_W + ICON_TEXT_GAP + text_size.w;
+      int icon_x = cx - unit_w / 2;
       int text_x = icon_x + ICON_W + ICON_TEXT_GAP;
       draw_weather_icon(ctx, icon_x, iy - 1, col, weather_icon_for_code(s_weather_code));
       graphics_draw_text(ctx, temp_str, font,
