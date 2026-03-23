@@ -3,27 +3,29 @@ module.exports = {
 
     var presets = [
       // ---- DARK (8) ----
-      { label:'Radium',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaffaa', lH:'#55ff00',lM:'#55ff00',lB:'#55ff00',lS:'#55ff00', dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500', tH:'#aaffaa',tM:'#aaffaa' },
-      { label:'Ember',   bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#ff5500',lM:'#ff5500',lB:'#ff5500',lS:'#ff5500', dH:'#555555',dM:'#555555',dB:'#555555',dS:'#555555', tH:'#ffffff',tM:'#ffffff' },
-      { label:'Cobalt',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#0055ff',lM:'#0055ff',lB:'#0055ff',lS:'#0055ff', dH:'#555555',dM:'#555555',dB:'#555555',dS:'#555555', tH:'#aaaaff',tM:'#aaaaff' },
+      // tH = leading hour tick (slightly brighter than lH)
+      // tM = leading minute tick (noticeably brighter/whiter than lM)
+      { label:'Radium',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaffaa', lH:'#55ff00',lM:'#55ff00',lB:'#55ff00',lS:'#55ff00', dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500', tH:'#aaffaa',tM:'#ffffff' },
+      { label:'Ember',   bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#ff5500',lM:'#ff5500',lB:'#ff5500',lS:'#ff5500', dH:'#555555',dM:'#555555',dB:'#555555',dS:'#555555', tH:'#ffaa55',tM:'#ffffff' },
+      { label:'Cobalt',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#0055ff',lM:'#0055ff',lB:'#0055ff',lS:'#0055ff', dH:'#555555',dM:'#555555',dB:'#555555',dS:'#555555', tH:'#aaaaff',tM:'#ffffff' },
       { label:'Slate',   bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#ffffff',lM:'#aaaaaa',lB:'#aaaaaa',lS:'#aaaaaa', dH:'#555555',dM:'#555555',dB:'#555555',dS:'#555555', tH:'#ffffff',tM:'#ffffff' },
-      { label:'Radium+', bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#55aa55', lH:'#00ff00',lM:'#00ff00',lB:'#00ff00',lS:'#00ff00', dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500', tH:'#aaffaa',tM:'#aaffaa' },
-      { label:'Crimson', bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aa5555', lH:'#ff5555',lM:'#ff5555',lB:'#ff5555',lS:'#ff5555', dH:'#550000',dM:'#550000',dB:'#550000',dS:'#550000', tH:'#ffffff',tM:'#ffffff' },
-      { label:'Ocean',   bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#0055aa', lH:'#00aaff',lM:'#00aaff',lB:'#00aaff',lS:'#00aaff', dH:'#0055aa',dM:'#0055aa',dB:'#0055aa',dS:'#0055aa', tH:'#aaffff',tM:'#aaffff' },
+      { label:'Radium+', bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#55aa55', lH:'#00ff00',lM:'#00ff00',lB:'#00ff00',lS:'#00ff00', dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500', tH:'#aaffaa',tM:'#ffffff' },
+      { label:'Crimson', bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aa5555', lH:'#ff5555',lM:'#ff5555',lB:'#ff5555',lS:'#ff5555', dH:'#550000',dM:'#550000',dB:'#550000',dS:'#550000', tH:'#ffaaaa',tM:'#ffffff' },
+      { label:'Ocean',   bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#0055aa', lH:'#00aaff',lM:'#00aaff',lB:'#00aaff',lS:'#00aaff', dH:'#0055aa',dM:'#0055aa',dB:'#0055aa',dS:'#0055aa', tH:'#aaffff',tM:'#ffffff' },
       { label:'Volt',    bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaa55', lH:'#ffff00',lM:'#ffff00',lB:'#ffff00',lS:'#ffff00', dH:'#555500',dM:'#555500',dB:'#555500',dS:'#555500', tH:'#ffffff',tM:'#ffffff' },
 
       // ---- DARK+ (8) ----
-      { label:'Dusk',    bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aa00aa', lH:'#ff55ff',lM:'#ff55ff',lB:'#ff55ff',lS:'#ff55ff', dH:'#550055',dM:'#550055',dB:'#550055',dS:'#550055', tH:'#ffffff',tM:'#ffffff' },
-      { label:'Horizon', bg:'#000000',obg:'#0000aa',tt:'#ffaa55',dt:'#aaaaaa', lH:'#0055ff',lM:'#ff5500',lB:'#0055aa',lS:'#aa5500', dH:'#0000aa',dM:'#550000',dB:'#0000aa',dS:'#550000', tH:'#aaaaff',tM:'#ffaa55' },
+      { label:'Dusk',    bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aa00aa', lH:'#ff55ff',lM:'#ff55ff',lB:'#ff55ff',lS:'#ff55ff', dH:'#550055',dM:'#550055',dB:'#550055',dS:'#550055', tH:'#ffaaff',tM:'#ffffff' },
+      { label:'Horizon', bg:'#000000',obg:'#0000aa',tt:'#ffaa55',dt:'#aaaaaa', lH:'#0055ff',lM:'#ff5500',lB:'#0055aa',lS:'#aa5500', dH:'#0000aa',dM:'#550000',dB:'#0000aa',dS:'#550000', tH:'#aaaaff',tM:'#ffff00' },
       { label:'Reactor', bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#00ffff',lM:'#ff0000',lB:'#00aaff',lS:'#ff5500', dH:'#005555',dM:'#550000',dB:'#005555',dS:'#550000', tH:'#aaffff',tM:'#ffaaaa' },
       { label:'Venom',   bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#aaff00',lM:'#aa00ff',lB:'#55ff00',lS:'#5500aa', dH:'#005500',dM:'#550055',dB:'#005500',dS:'#550055', tH:'#ffffff',tM:'#ffffff' },
       { label:'Blossom', bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#aaffaa',lM:'#ff55aa',lB:'#55ffaa',lS:'#ff0055', dH:'#005500',dM:'#550055',dB:'#005500',dS:'#aa0055', tH:'#ffffff',tM:'#ffffff' },
       { label:'Solar',   bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#ffaa00', lH:'#ff5500',lM:'#ffaa00',lB:'#ffff00',lS:'#aaff00', dH:'#550000',dM:'#555500',dB:'#555500',dS:'#005500', tH:'#ffff00',tM:'#ffffff' },
-      { label:'Aurora',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaffff', lH:'#00ffff',lM:'#00ff55',lB:'#00aaff',lS:'#aaffaa', dH:'#005555',dM:'#005500',dB:'#005555',dS:'#005500', tH:'#ffffff',tM:'#aaffff' },
+      { label:'Aurora',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaffff', lH:'#00ffff',lM:'#00ff55',lB:'#00aaff',lS:'#aaffaa', dH:'#005555',dM:'#005500',dB:'#005555',dS:'#005500', tH:'#ffffff',tM:'#ffffff' },
       { label:'Neon',    bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#00ff00',lM:'#ff00ff',lB:'#00ffff',lS:'#ff55ff', dH:'#005500',dM:'#550055',dB:'#005555',dS:'#550055', tH:'#aaffaa',tM:'#ffffff' },
 
       // ---- LIGHT (8) ----
-      { label:'Paper',    bg:'#ffffff',obg:'#ffffff',tt:'#000000',dt:'#555555', lH:'#000000',lM:'#000000',lB:'#000000',lS:'#000000', dH:'#aaaaaa',dM:'#aaaaaa',dB:'#aaaaaa',dS:'#aaaaaa', tH:'#555555',tM:'#555555' },
+      { label:'Paper',    bg:'#ffffff',obg:'#ffffff',tt:'#000000',dt:'#555555', lH:'#000000',lM:'#000000',lB:'#000000',lS:'#000000', dH:'#aaaaaa',dM:'#aaaaaa',dB:'#aaaaaa',dS:'#aaaaaa', tH:'#555555',tM:'#000000' },
       { label:'Jade',     bg:'#ffffff',obg:'#ffffff',tt:'#000000',dt:'#555555', lH:'#00aa55',lM:'#00aa55',lB:'#00aa55',lS:'#00aa55', dH:'#aaaaaa',dM:'#aaaaaa',dB:'#aaaaaa',dS:'#aaaaaa', tH:'#005500',tM:'#005500' },
       { label:'Sapphire', bg:'#ffffff',obg:'#ffffff',tt:'#000000',dt:'#555555', lH:'#0055aa',lM:'#0055aa',lB:'#0055aa',lS:'#0055aa', dH:'#aaaaaa',dM:'#aaaaaa',dB:'#aaaaaa',dS:'#aaaaaa', tH:'#000055',tM:'#000055' },
       { label:'Ruby',     bg:'#ffffff',obg:'#ffffff',tt:'#000000',dt:'#555555', lH:'#aa0000',lM:'#aa0000',lB:'#aa0000',lS:'#aa0000', dH:'#aaaaaa',dM:'#aaaaaa',dB:'#aaaaaa',dS:'#aaaaaa', tH:'#550000',tM:'#550000' },
@@ -33,8 +35,8 @@ module.exports = {
       { label:'Sepia',    bg:'#ffffaa',obg:'#ffffaa',tt:'#000000',dt:'#aa5500', lH:'#550000',lM:'#550000',lB:'#550000',lS:'#550000', dH:'#ffaa55',dM:'#ffaa55',dB:'#ffaa55',dS:'#ffaa55', tH:'#000000',tM:'#000000' },
 
       // ---- COLOR (8) ----
-      { label:'Teal',         bg:'#00aaaa',obg:'#00aaaa',tt:'#ffffff',dt:'#ffffff', lH:'#ffffff',lM:'#ffffff',lB:'#ffffff',lS:'#ffffff', dH:'#005555',dM:'#005555',dB:'#005555',dS:'#005555', tH:'#aaffff',tM:'#aaffff' },
-      { label:'Flame',        bg:'#ff5500',obg:'#ff5500',tt:'#ffffff',dt:'#ffffff', lH:'#ffffff',lM:'#ffffff',lB:'#ffffff',lS:'#ffffff', dH:'#aa5500',dM:'#aa5500',dB:'#aa5500',dS:'#aa5500', tH:'#ffff00',tM:'#ffff00' },
+      { label:'Teal',         bg:'#00aaaa',obg:'#00aaaa',tt:'#ffffff',dt:'#ffffff', lH:'#ffffff',lM:'#ffffff',lB:'#ffffff',lS:'#ffffff', dH:'#005555',dM:'#005555',dB:'#005555',dS:'#005555', tH:'#aaffff',tM:'#ffffff' },
+      { label:'Flame',        bg:'#ff5500',obg:'#ff5500',tt:'#ffffff',dt:'#ffffff', lH:'#ffffff',lM:'#ffffff',lB:'#ffffff',lS:'#ffffff', dH:'#aa5500',dM:'#aa5500',dB:'#aa5500',dS:'#aa5500', tH:'#ffff00',tM:'#ffffff' },
       { label:'Plum',         bg:'#550055',obg:'#550055',tt:'#ffffff',dt:'#ff55ff', lH:'#ff55ff',lM:'#ff55ff',lB:'#ff55ff',lS:'#ff55ff', dH:'#aa00aa',dM:'#aa00aa',dB:'#aa00aa',dS:'#aa00aa', tH:'#ffffff',tM:'#ffffff' },
       { label:'Forest',       bg:'#005500',obg:'#005500',tt:'#ffffff',dt:'#55ff00', lH:'#55ff00',lM:'#55ff00',lB:'#55ff00',lS:'#55ff00', dH:'#55aa00',dM:'#55aa00',dB:'#55aa00',dS:'#55aa00', tH:'#ffffff',tM:'#ffffff' },
       { label:'Midnight',     bg:'#0000aa',obg:'#0000aa',tt:'#aaaaff',dt:'#aaaaff', lH:'#00ffff',lM:'#aaaaff',lB:'#00aaff',lS:'#aaaaff', dH:'#0055aa',dM:'#0055aa',dB:'#0055aa',dS:'#0055aa', tH:'#ffffff',tM:'#ffffff' },
@@ -43,13 +45,13 @@ module.exports = {
       { label:'Ash',          bg:'#555555',obg:'#555555',tt:'#ffffff',dt:'#ffffff', lH:'#ffffff',lM:'#ffffff',lB:'#ffffff',lS:'#ffffff', dH:'#aaaaaa',dM:'#aaaaaa',dB:'#aaaaaa',dS:'#aaaaaa', tH:'#ffffff',tM:'#ffffff' },
 
       // ---- SPECIAL (8) ----
-      { label:'Hearth',   bg:'#000000',obg:'#000000',tt:'#ffaa55',dt:'#aa5500', lH:'#ff5500',lM:'#ff5500',lB:'#ffaa00',lS:'#ffaa00', dH:'#550000',dM:'#550000',dB:'#aa5500',dS:'#550000', tH:'#ffff00',tM:'#ffff00' },
-      { label:'Boreal',   bg:'#000000',obg:'#0000aa',tt:'#aaaaff',dt:'#0055aa', lH:'#00aaff',lM:'#55ffff',lB:'#00ffff',lS:'#55aaff', dH:'#0000aa',dM:'#005555',dB:'#005555',dS:'#0000aa', tH:'#ffffff',tM:'#aaffff' },
-      { label:'GoldEye',  bg:'#000000',obg:'#005500',tt:'#ffffff',dt:'#00ff00', lH:'#ff5500',lM:'#00aaff',lB:'#00ff00',lS:'#00ff00', dH:'#550000',dM:'#0000aa',dB:'#005500',dS:'#005500', tH:'#ffff00',tM:'#aaffff' },
-      { label:'Viper',    bg:'#000000',obg:'#0000aa',tt:'#ffffff',dt:'#aaffff', lH:'#00ffff',lM:'#00ff55',lB:'#0055ff',lS:'#aaffaa', dH:'#005555',dM:'#005500',dB:'#0000aa',dS:'#005500', tH:'#ffffff',tM:'#aaffaa' },
-      { label:'Inferno',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#ffaa00', lH:'#ff0000',lM:'#ff5500',lB:'#ffaa00',lS:'#aaff00', dH:'#550000',dM:'#550000',dB:'#555500',dS:'#005500', tH:'#ffff00',tM:'#ffff00' },
+      { label:'Hearth',   bg:'#000000',obg:'#000000',tt:'#ffaa55',dt:'#aa5500', lH:'#ff5500',lM:'#ff5500',lB:'#ffaa00',lS:'#ffaa00', dH:'#550000',dM:'#550000',dB:'#aa5500',dS:'#550000', tH:'#ffff00',tM:'#ffffff' },
+      { label:'Boreal',   bg:'#000000',obg:'#0000aa',tt:'#aaaaff',dt:'#0055aa', lH:'#00aaff',lM:'#55ffff',lB:'#00ffff',lS:'#55aaff', dH:'#0000aa',dM:'#005555',dB:'#005555',dS:'#0000aa', tH:'#ffffff',tM:'#ffffff' },
+      { label:'GoldEye',  bg:'#000000',obg:'#005500',tt:'#ffffff',dt:'#00ff00', lH:'#ff5500',lM:'#00aaff',lB:'#00ff00',lS:'#00ff00', dH:'#550000',dM:'#0000aa',dB:'#005500',dS:'#005500', tH:'#ffff00',tM:'#ffffff' },
+      { label:'Viper',    bg:'#000000',obg:'#0000aa',tt:'#ffffff',dt:'#aaffff', lH:'#00ffff',lM:'#00ff55',lB:'#0055ff',lS:'#aaffaa', dH:'#005555',dM:'#005500',dB:'#0000aa',dS:'#005500', tH:'#ffffff',tM:'#ffffff' },
+      { label:'Inferno',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#ffaa00', lH:'#ff0000',lM:'#ff5500',lB:'#ffaa00',lS:'#aaff00', dH:'#550000',dM:'#550000',dB:'#555500',dS:'#005500', tH:'#ffff00',tM:'#ffffff' },
       { label:'Cosmos',   bg:'#0000aa',obg:'#0000aa',tt:'#aaaaff',dt:'#ff55ff', lH:'#aa00ff',lM:'#ff00ff',lB:'#ff55aa',lS:'#ff0055', dH:'#550055',dM:'#550055',dB:'#550055',dS:'#550000', tH:'#ffffff',tM:'#ffffff' },
-      { label:'Triadic',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#ff0000',lM:'#0055ff',lB:'#00ff00',lS:'#aa00ff', dH:'#550000',dM:'#0000aa',dB:'#005500',dS:'#550055', tH:'#ffaa55',tM:'#aaaaff' },
+      { label:'Triadic',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#ff0000',lM:'#0055ff',lB:'#00ff00',lS:'#aa00ff', dH:'#550000',dM:'#0000aa',dB:'#005500',dS:'#550055', tH:'#ffaa55',tM:'#ffffff' },
       { label:'Rainbow',  bg:'#000000',obg:'#000000',tt:'#ffffff',dt:'#aaaaaa', lH:'#ff0000',lM:'#ffaa00',lB:'#00ff00',lS:'#00ffff', dH:'#550000',dM:'#aa5500',dB:'#005500',dS:'#005555', tH:'#ffff00',tM:'#ffffff' },
     ];
 
@@ -82,7 +84,6 @@ module.exports = {
       '#ffff00':'GColorYellow','#ffff55':'GColorIcterine','#ffffaa':'GColorPastelYellow','#ffffff':'GColorWhite'
     };
 
-    // Inner lines: allow long text fields
     var fieldOptionsInner = [
       { value: 0, label: 'None' },
       { value: 1, label: 'Day' },
@@ -94,7 +95,6 @@ module.exports = {
       { value: 7, label: 'Battery' },
     ];
 
-    // Outer lines: short fields only (no Day, no Day+Date)
     var fieldOptionsOuter = [
       { value: 0, label: 'None' },
       { value: 2, label: 'Date' },
@@ -229,7 +229,9 @@ module.exports = {
       + '<input type="radio" name="overlay" id="ov0" value="0" checked><label for="ov0">Always On</label>'
       + '<input type="radio" name="overlay" id="ov1" value="1"><label for="ov1">Always Off</label>'
       + '<input type="radio" name="overlay" id="ov2" value="2"><label for="ov2">Shake</label>'
-      + '</div></div>'
+      + '</div>'
+      + '<div class="row"><label>Large overlay (Emery / Gabbro)</label><label class="toggle"><input type="checkbox" id="OverlaySize"><span class="knob"></span></label></div>'
+      + '</div>'
 
       + '<h2>Info Lines</h2><div class="card">'
       + '<div class="field-row"><label>Line 1</label>' + makeSelect('TopOuterField',    0, fieldOptionsOuter) + '</div>'
@@ -245,6 +247,13 @@ module.exports = {
       + '<div class="sub-rows" id="sub-text">'
       + '<div class="sub-row"><label>Time</label><div class="swatch" id="sw-TimeTextColor" onclick="openPicker(\'TimeTextColor\')"></div></div>'
       + '<div class="sub-row"><label>Date &amp; Day</label><div class="swatch" id="sw-DateTextColor" onclick="openPicker(\'DateTextColor\')"></div></div>'
+      + '<div class="sub-expand-row" onclick="toggle2(\'infolines\')"><label>Info Lines</label><div class="right"><div class="swatch" id="sw-InfoLinesAll" onclick="openPicker(\'InfoLinesAll\');event.stopPropagation()"></div><span class="sub-expand-btn" id="btn2-infolines">+</span></div></div>'
+      + '<div class="sub-sub-rows" id="sub2-infolines">'
+      + '<div class="sub-sub-row"><label>Line 1</label><div class="swatch" id="sw-InfoLine1Color" onclick="openPicker(\'InfoLine1Color\')"></div></div>'
+      + '<div class="sub-sub-row"><label>Line 2</label><div class="swatch" id="sw-InfoLine2Color" onclick="openPicker(\'InfoLine2Color\')"></div></div>'
+      + '<div class="sub-sub-row"><label>Line 3</label><div class="swatch" id="sw-InfoLine3Color" onclick="openPicker(\'InfoLine3Color\')"></div></div>'
+      + '<div class="sub-sub-row"><label>Line 4</label><div class="swatch" id="sw-InfoLine4Color" onclick="openPicker(\'InfoLine4Color\')"></div></div>'
+      + '</div>'
       + '</div>'
       + '<div class="expand-row" onclick="toggle(\'lit\')"><label>Lit</label><div class="right"><div class="swatch" id="sw-LitAll" onclick="openPicker(\'LitAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-lit">+</span></div></div>'
       + '<div class="sub-rows" id="sub-lit">'
@@ -308,7 +317,8 @@ module.exports = {
       + 'BackgroundColor:"#000000",OverlayBgColor:"#000000",TimeTextColor:"#ffffff",DateTextColor:"#aaaaaa",'
       + 'LitHourColor:"#aaffaa",LitMinuteColor:"#aaffaa",LitBatteryColor:"#aaffaa",LitStepsColor:"#aaffaa",'
       + 'DimHourColor:"#555555",DimMinuteColor:"#555555",DimBatteryColor:"#555555",DimStepsColor:"#555555",'
-      + 'LitHourTipColor:"#ffffff",LitMinuteTipColor:"#ffffff"'
+      + 'LitHourTipColor:"#ffffff",LitMinuteTipColor:"#ffffff",'
+      + 'InfoLine1Color:"#aaaaaa",InfoLine2Color:"#aaaaaa",InfoLine3Color:"#aaaaaa",InfoLine4Color:"#aaaaaa"'
       + '};'
 
       + 'function updateSwatches(key,hex){'
@@ -324,6 +334,7 @@ module.exports = {
       + 'setQuad("sw-DimAll",colors.DimHourColor,colors.DimMinuteColor,colors.DimBatteryColor,colors.DimStepsColor);'
       + 'setSplit("sw-TextAll",colors.TimeTextColor,colors.DateTextColor);'
       + 'setSplit("sw-BaseAll",colors.BackgroundColor,colors.OverlayBgColor);'
+      + 'setQuad("sw-InfoLinesAll",colors.InfoLine1Color,colors.InfoLine2Color,colors.InfoLine3Color,colors.InfoLine4Color);'
       + '}'
 
       + 'var cascadeMap={'
@@ -331,14 +342,15 @@ module.exports = {
       + '"LitTicks":["LitHourColor","LitMinuteColor"],"LitRing":["LitBatteryColor","LitStepsColor"],'
       + '"DimAll":["DimHourColor","DimMinuteColor","DimBatteryColor","DimStepsColor"],'
       + '"DimTicks":["DimHourColor","DimMinuteColor"],"DimRing":["DimBatteryColor","DimStepsColor"],'
-      + '"TextAll":["TimeTextColor","DateTextColor"],"BaseAll":["BackgroundColor","OverlayBgColor"]'
+      + '"TextAll":["TimeTextColor","DateTextColor"],"BaseAll":["BackgroundColor","OverlayBgColor"],'
+      + '"InfoLinesAll":["InfoLine1Color","InfoLine2Color","InfoLine3Color","InfoLine4Color"]'
       + '};'
 
       + 'var pickerTarget=null,pickerKeys=null;'
 
       + 'function openPicker(key){'
       + 'pickerTarget=key;pickerKeys=cascadeMap[key]||[key];'
-      + 'var labels={"LitAll":"Lit","LitTicks":"Time Ticks","LitRing":"Outer Ring","DimAll":"Unlit","DimTicks":"Time Ticks","DimRing":"Outer Ring","TextAll":"Text","BaseAll":"Base"};'
+      + 'var labels={"LitAll":"Lit","LitTicks":"Time Ticks","LitRing":"Outer Ring","DimAll":"Unlit","DimTicks":"Time Ticks","DimRing":"Outer Ring","TextAll":"Text","BaseAll":"Base","InfoLinesAll":"Info Lines"};'
       + 'document.getElementById("modal-title").textContent=labels[key]||key.replace(/([A-Z])/g," $1").trim();'
       + 'var grid=document.getElementById("palette-grid");grid.innerHTML="";'
       + 'PALETTE.forEach(function(hex){'
@@ -357,6 +369,7 @@ module.exports = {
       + 'try{if(!CURRENT)return;'
       + 'Object.keys(CURRENT).forEach(function(k){'
       + 'if(k==="OverlayMode"){var el=document.getElementById("ov"+CURRENT[k]);if(el)el.checked=true;}'
+      + 'else if(k==="OverlaySize"){document.getElementById("OverlaySize").checked=(CURRENT[k]===1);}'
       + 'else if(k==="InvertBW"){document.getElementById("InvertBW").checked=!!CURRENT[k];}'
       + 'else if(k==="ShowRing"){document.getElementById("ShowRing").checked=!!CURRENT[k];}'
       + 'else if(k==="StepGoal"){var el=document.getElementById("StepGoal");el.value=CURRENT[k];document.getElementById("goalVal").textContent=parseInt(CURRENT[k]).toLocaleString();}'
@@ -377,7 +390,9 @@ module.exports = {
       + 'updateSwatches("LitBatteryColor",p.lB);updateSwatches("LitStepsColor",p.lS);'
       + 'updateSwatches("DimHourColor",p.dH);updateSwatches("DimMinuteColor",p.dM);'
       + 'updateSwatches("DimBatteryColor",p.dB);updateSwatches("DimStepsColor",p.dS);'
-      + 'updateSwatches("LitHourTipColor",p.tH);updateSwatches("LitMinuteTipColor",p.tM);}'
+      + 'updateSwatches("LitHourTipColor",p.tH);updateSwatches("LitMinuteTipColor",p.tM);'
+      + 'updateSwatches("InfoLine1Color",p.dt);updateSwatches("InfoLine2Color",p.dt);'
+      + 'updateSwatches("InfoLine3Color",p.dt);updateSwatches("InfoLine4Color",p.dt);}'
 
       + 'function h(hex){return parseInt(hex.slice(1),16);}'
       + 'function tog(id){return document.getElementById(id).checked?1:0;}'
@@ -393,7 +408,9 @@ module.exports = {
       + 'DimHourColor:h(colors.DimHourColor),DimMinuteColor:h(colors.DimMinuteColor),'
       + 'DimBatteryColor:h(colors.DimBatteryColor),DimStepsColor:h(colors.DimStepsColor),'
       + 'LitHourTipColor:h(colors.LitHourTipColor),LitMinuteTipColor:h(colors.LitMinuteTipColor),'
-      + 'InvertBW:tog("InvertBW"),ShowRing:tog("ShowRing"),'
+      + 'InfoLine1Color:h(colors.InfoLine1Color),InfoLine2Color:h(colors.InfoLine2Color),'
+      + 'InfoLine3Color:h(colors.InfoLine3Color),InfoLine4Color:h(colors.InfoLine4Color),'
+      + 'InvertBW:tog("InvertBW"),ShowRing:tog("ShowRing"),OverlaySize:tog("OverlaySize"),'
       + 'StepGoal:parseInt(document.getElementById("StepGoal").value),'
       + 'TopOuterField:sel("TopOuterField"),TopInnerField:sel("TopInnerField"),'
       + 'BottomInnerField:sel("BottomInnerField"),BottomOuterField:sel("BottomOuterField")'

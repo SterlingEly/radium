@@ -36,7 +36,12 @@
             "BottomOuterField",
             "WeatherTempF",
             "WeatherTempC",
-            "WeatherCode"
+            "WeatherCode",
+            "InfoLine1Color",
+            "InfoLine2Color",
+            "InfoLine3Color",
+            "InfoLine4Color",
+            "OverlaySize"
         ],
         "projectType": "native",
         "resources": {
