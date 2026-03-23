@@ -68,22 +68,24 @@ static void prv_default_settings(void) {
   s_settings.BackgroundColor   = GColorBlack;
   s_settings.OverlayBgColor    = GColorBlack;
 #if defined(PBL_COLOR)
+  // Defaults match the Radium preset
   s_settings.TimeTextColor     = GColorWhite;
-  s_settings.DateTextColor     = GColorWhite;
-  s_settings.LitHourColor      = GColorMintGreen;
-  s_settings.LitMinuteColor    = GColorMintGreen;
-  s_settings.LitBatteryColor   = GColorMintGreen;
-  s_settings.LitStepsColor     = GColorMintGreen;
-  s_settings.DimHourColor      = GColorDarkGray;
-  s_settings.DimMinuteColor    = GColorDarkGray;
-  s_settings.DimBatteryColor   = GColorDarkGray;
-  s_settings.DimStepsColor     = GColorDarkGray;
-  s_settings.LitHourTipColor   = GColorWhite;
+  s_settings.DateTextColor     = GColorMintGreen;
+  s_settings.LitHourColor      = GColorBrightGreen;
+  s_settings.LitMinuteColor    = GColorBrightGreen;
+  s_settings.LitBatteryColor   = GColorBrightGreen;
+  s_settings.LitStepsColor     = GColorBrightGreen;
+  s_settings.DimHourColor      = GColorDarkGreen;
+  s_settings.DimMinuteColor    = GColorDarkGreen;
+  s_settings.DimBatteryColor   = GColorDarkGreen;
+  s_settings.DimStepsColor     = GColorDarkGreen;
+  s_settings.LitHourTipColor   = GColorMintGreen;
   s_settings.LitMinuteTipColor = GColorWhite;
-  s_settings.InfoLine1Color    = GColorMintGreen;  // outer: lit tick color
-  s_settings.InfoLine2Color    = GColorLightGray;  // inner: subdued
-  s_settings.InfoLine3Color    = GColorLightGray;  // inner: subdued
-  s_settings.InfoLine4Color    = GColorMintGreen;  // outer: lit tick color
+  // Lines 1&4 = light gray (outer/accent), Lines 2&3 = MintGreen (inner, matches dt)
+  s_settings.InfoLine1Color    = GColorLightGray;
+  s_settings.InfoLine2Color    = GColorMintGreen;
+  s_settings.InfoLine3Color    = GColorMintGreen;
+  s_settings.InfoLine4Color    = GColorLightGray;
 #else
   s_settings.TimeTextColor     = GColorWhite;
   s_settings.DateTextColor     = GColorWhite;
@@ -218,11 +220,9 @@ static int weather_icon_for_code(int code) {
 static void draw_footprint(GContext *ctx, int fx, int fy, GColor col, bool large) {
   graphics_context_set_fill_color(ctx, col);
   if (!large) {
-    // 9px total: 5px toe + 4px heel overlapping 0px = fits in 11px cap
     graphics_fill_rect(ctx, GRect(fx, fy, 4, 5), 2, GCornersAll);
     graphics_fill_rect(ctx, GRect(fx+1, fy+4, 2, 4), 1, GCornersAll);
   } else {
-    // 13px total: fits in 14px cap
     graphics_fill_rect(ctx, GRect(fx, fy, 5, 7), 2, GCornersAll);
     graphics_fill_rect(ctx, GRect(fx+1, fy+6, 3, 4), 1, GCornersAll);
   }
@@ -230,11 +230,9 @@ static void draw_footprint(GContext *ctx, int fx, int fy, GColor col, bool large
 
 static void draw_steps_icon(GContext *ctx, int ox, int oy, GColor col, bool large) {
   if (!large) {
-    // Shift up 1px so top of icon aligns with text cap top
     draw_footprint(ctx, ox+5, oy-1, col, false);
     draw_footprint(ctx, ox+0, oy+2, col, false);
   } else {
-    // Large: 14px total, drawn flush at oy
     draw_footprint(ctx, ox+7, oy+0, col, true);
     draw_footprint(ctx, ox+0, oy+3, col, true);
   }
@@ -281,7 +279,6 @@ static void draw_cloud_icon(GContext *ctx, int ox, int oy, GColor col, bool larg
     graphics_fill_rect(ctx, GRect(ox+6, oy+2, 3, 2), 0, GCornerNone);
     graphics_fill_rect(ctx, GRect(ox+1, oy+3, 9, 4), 0, GCornerNone);
   } else {
-    // Fits in 14px: rows 0-9
     graphics_fill_rect(ctx, GRect(ox+3, oy+2, 5, 1), 0, GCornerNone);
     graphics_fill_rect(ctx, GRect(ox+4, oy+0, 4, 3), 0, GCornerNone);
     graphics_fill_rect(ctx, GRect(ox+8, oy+1, 4, 3), 0, GCornerNone);
@@ -302,7 +299,6 @@ static void draw_partly_cloudy_icon(GContext *ctx, int ox, int oy, GColor col, b
     graphics_fill_rect(ctx, GRect(ox+5, oy+4, 2, 1), 0, GCornerNone);
     graphics_fill_rect(ctx, GRect(ox+1, oy+5, 7, 4), 0, GCornerNone);
   } else {
-    // Sun fits in rows 0-7, cloud fills rows 5-13
     graphics_draw_circle(ctx, GPoint(ox+10, oy+3), 3);
     graphics_draw_pixel(ctx, GPoint(ox+10, oy));
     graphics_draw_pixel(ctx, GPoint(ox+14, oy+3));
@@ -389,15 +385,12 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
   if (field == FIELD_DAY_LONG) {
     graphics_draw_text(ctx, s_day_buffer, font,
       GRect(0, y, w, font_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
-
   } else if (field == FIELD_DATE) {
     graphics_draw_text(ctx, s_date_buffer, font,
       GRect(0, y, w, font_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
-
   } else if (field == FIELD_DAY_DATE) {
     graphics_draw_text(ctx, s_day_date_buffer, font,
       GRect(0, y, w, font_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
-
   } else if (field == FIELD_STEPS) {
     GSize text_size = graphics_text_layout_get_content_size(
       s_steps_buffer, font, GRect(0, 0, 200, 20),
@@ -405,11 +398,9 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
     int unit_w = icon_w + ICON_TEXT_GAP + text_size.w;
     int icon_x = cx - unit_w / 2;
     int text_x = icon_x + icon_w + ICON_TEXT_GAP;
-    // draw_steps_icon has -1 baked in for small; large is flush
     draw_steps_icon(ctx, icon_x, iy, col, large);
     graphics_draw_text(ctx, s_steps_buffer, font,
       GRect(text_x, y, w - text_x, font_h + 2), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-
   } else if (field == FIELD_BATTERY) {
     GSize text_size = graphics_text_layout_get_content_size(
       s_battery_buffer, font, GRect(0, 0, 200, 20),
@@ -420,7 +411,6 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
     draw_battery_icon(ctx, icon_x, iy, col, s_battery, large);
     graphics_draw_text(ctx, s_battery_buffer, font,
       GRect(text_x, y, w - text_x, font_h + 2), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
-
   } else if (field == FIELD_TEMP_F || field == FIELD_TEMP_C) {
     bool is_f  = (field == FIELD_TEMP_F);
     bool ready = is_f ? (s_weather_temp_f != INT_MIN) : (s_weather_temp_c != INT_MIN);
@@ -435,7 +425,6 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
       int unit_w = icon_w + ICON_TEXT_GAP + text_size.w;
       int icon_x = cx - unit_w / 2;
       int text_x = icon_x + icon_w + ICON_TEXT_GAP;
-      // Small: -1 aligns icon top with text cap; large: 0 (icon fits flush in 14px)
       int icon_y_off = large ? 0 : -1;
       draw_weather_icon(ctx, icon_x, iy + icon_y_off, col, weather_icon_for_code(s_weather_code), large);
       graphics_draw_text(ctx, temp_str, font,
@@ -904,15 +893,8 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   // ----------------------------------------------------------
   // TEXT / FIELD OVERLAY
-  //
-  // Small: LECO_36/GOTHIC_18, circle 58px
-  //   time_y = cy - 23  (1px higher)
-  //   single line offset 12px, multi gap 6px, stride 17
-  //
-  // Large: LECO_42/GOTHIC_24, circle 70px
-  //   time_y = cy - 27
-  //   single line offset 16px, multi gap 7px, stride 21
-  //   top block: -2px nudge, bottom block: -7px nudge
+  // Small: LECO_36/GOTHIC_18, circle 58px, time_y cy-23, gap 6, stride 17
+  // Large: LECO_42/GOTHIC_24, circle 70px, time_y cy-27, gap 7, stride 21
   // ----------------------------------------------------------
   if (prv_overlay_visible()) {
     int time_h, cap_h, line_gap, stride, single_offset;
