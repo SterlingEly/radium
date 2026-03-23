@@ -80,10 +80,10 @@ static void prv_default_settings(void) {
   s_settings.DimStepsColor     = GColorDarkGray;
   s_settings.LitHourTipColor   = GColorWhite;
   s_settings.LitMinuteTipColor = GColorWhite;
-  s_settings.InfoLine1Color    = GColorLightGray;
-  s_settings.InfoLine2Color    = GColorLightGray;
-  s_settings.InfoLine3Color    = GColorLightGray;
-  s_settings.InfoLine4Color    = GColorLightGray;
+  s_settings.InfoLine1Color    = GColorMintGreen;  // outer: lit tick color
+  s_settings.InfoLine2Color    = GColorLightGray;  // inner: subdued
+  s_settings.InfoLine3Color    = GColorLightGray;  // inner: subdued
+  s_settings.InfoLine4Color    = GColorMintGreen;  // outer: lit tick color
 #else
   s_settings.TimeTextColor     = GColorWhite;
   s_settings.DateTextColor     = GColorWhite;
@@ -106,12 +106,10 @@ static void prv_default_settings(void) {
   s_settings.OverlayMode      = OVERLAY_SHAKE;
   s_settings.InvertBW         = false;
   s_settings.ShowRing         = true;
-  // DEBUG: all 4 slots populated
   s_settings.TopOuterField    = FIELD_TEMP_F;
   s_settings.TopInnerField    = FIELD_DAY_LONG;
   s_settings.BottomInnerField = FIELD_DATE;
   s_settings.BottomOuterField = FIELD_STEPS;
-  // Large overlay default on emery and gabbro (Round 2); small everywhere else
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
   s_settings.OverlaySize = OVERLAY_LARGE;
 #else
@@ -140,7 +138,6 @@ static int  s_battery = 100;
 static int  s_steps   = 0;
 static bool s_show_overlay = true;
 
-// Weather -- both units stored, INT_MIN = not yet received
 static int  s_weather_temp_f = INT_MIN;
 static int  s_weather_temp_c = INT_MIN;
 static int  s_weather_code   = 0;
@@ -149,10 +146,10 @@ static char s_time_buffer[8];
 static char s_day_buffer[12];
 static char s_date_buffer[10];
 static char s_day_date_buffer[14];
-static char s_steps_buffer[12];  // "99,999" + null
-static char s_battery_buffer[6]; // e.g. "72%"
-static char s_temp_f_buffer[8];  // e.g. "72F"
-static char s_temp_c_buffer[8];  // e.g. "22C"
+static char s_steps_buffer[12];
+static char s_battery_buffer[6];
+static char s_temp_f_buffer[8];
+static char s_temp_c_buffer[8];
 
 static GPoint    s_tri_pts[3];
 static GPathInfo s_tri_info = { .num_points = 3, .points = s_tri_pts };
@@ -180,7 +177,6 @@ static bool prv_overlay_visible(void) {
   return (s_settings.OverlayMode != OVERLAY_OFF) && s_show_overlay;
 }
 
-// draw_wedge: filled triangle from center to arc
 static void draw_wedge(GContext *ctx, int cx, int cy, int radius,
                        int32_t a1, int32_t a2) {
   s_tri_pts[0] = GPoint(cx, cy);
@@ -193,7 +189,6 @@ static void draw_wedge(GContext *ctx, int cx, int cy, int radius,
 
 // ============================================================
 // WEATHER CODE -> ICON TYPE
-// 0=sun, 1=partly cloudy, 2=cloud, 3=rain, 4=snow, 5=storm
 // ============================================================
 static int weather_icon_for_code(int code) {
   if (code == 0)                             return 0;
@@ -209,8 +204,10 @@ static int weather_icon_for_code(int code) {
 
 // ============================================================
 // ICON DRAWING
-// Small icons: 11x11px (GOTHIC_18_BOLD cap = 11px)
-// Large icons: 15x15px (GOTHIC_24_BOLD cap = 15px)
+// Small icons: 11x11px aligned to GOTHIC_18_BOLD cap (11px)
+// Large icons: 14x14px aligned to GOTHIC_24_BOLD cap (14px)
+// All icons drawn at iy (= y + font_pad).
+// Small steps/weather have a -1 baked in to top-align within cap.
 // ============================================================
 #define SMALL_FONT_PAD   8
 #define LARGE_FONT_PAD   10
@@ -221,21 +218,25 @@ static int weather_icon_for_code(int code) {
 static void draw_footprint(GContext *ctx, int fx, int fy, GColor col, bool large) {
   graphics_context_set_fill_color(ctx, col);
   if (!large) {
+    // 9px total: 5px toe + 4px heel overlapping 0px = fits in 11px cap
     graphics_fill_rect(ctx, GRect(fx, fy, 4, 5), 2, GCornersAll);
     graphics_fill_rect(ctx, GRect(fx+1, fy+4, 2, 4), 1, GCornersAll);
   } else {
+    // 13px total: fits in 14px cap
     graphics_fill_rect(ctx, GRect(fx, fy, 5, 7), 2, GCornersAll);
-    graphics_fill_rect(ctx, GRect(fx+1, fy+6, 3, 5), 1, GCornersAll);
+    graphics_fill_rect(ctx, GRect(fx+1, fy+6, 3, 4), 1, GCornersAll);
   }
 }
 
 static void draw_steps_icon(GContext *ctx, int ox, int oy, GColor col, bool large) {
   if (!large) {
-    draw_footprint(ctx, ox+5, oy+0, col, false);
-    draw_footprint(ctx, ox+0, oy+3, col, false);
+    // Shift up 1px so top of icon aligns with text cap top
+    draw_footprint(ctx, ox+5, oy-1, col, false);
+    draw_footprint(ctx, ox+0, oy+2, col, false);
   } else {
+    // Large: 14px total, drawn flush at oy
     draw_footprint(ctx, ox+7, oy+0, col, true);
-    draw_footprint(ctx, ox+0, oy+4, col, true);
+    draw_footprint(ctx, ox+0, oy+3, col, true);
   }
 }
 
@@ -280,10 +281,11 @@ static void draw_cloud_icon(GContext *ctx, int ox, int oy, GColor col, bool larg
     graphics_fill_rect(ctx, GRect(ox+6, oy+2, 3, 2), 0, GCornerNone);
     graphics_fill_rect(ctx, GRect(ox+1, oy+3, 9, 4), 0, GCornerNone);
   } else {
-    graphics_fill_rect(ctx, GRect(ox+3, oy+3, 5, 1), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(ox+4, oy+1, 4, 3), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(ox+8, oy+2, 4, 3), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(ox+1, oy+4, 13, 6), 0, GCornerNone);
+    // Fits in 14px: rows 0-9
+    graphics_fill_rect(ctx, GRect(ox+3, oy+2, 5, 1), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(ox+4, oy+0, 4, 3), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(ox+8, oy+1, 4, 3), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(ox+1, oy+3, 13, 6), 0, GCornerNone);
   }
 }
 
@@ -300,25 +302,26 @@ static void draw_partly_cloudy_icon(GContext *ctx, int ox, int oy, GColor col, b
     graphics_fill_rect(ctx, GRect(ox+5, oy+4, 2, 1), 0, GCornerNone);
     graphics_fill_rect(ctx, GRect(ox+1, oy+5, 7, 4), 0, GCornerNone);
   } else {
-    graphics_draw_circle(ctx, GPoint(ox+10, oy+4), 3);
+    // Sun fits in rows 0-7, cloud fills rows 5-13
+    graphics_draw_circle(ctx, GPoint(ox+10, oy+3), 3);
     graphics_draw_pixel(ctx, GPoint(ox+10, oy));
-    graphics_draw_pixel(ctx, GPoint(ox+14, oy+4));
-    graphics_draw_pixel(ctx, GPoint(ox+10, oy+8));
+    graphics_draw_pixel(ctx, GPoint(ox+14, oy+3));
+    graphics_draw_pixel(ctx, GPoint(ox+10, oy+7));
     graphics_context_set_fill_color(ctx, col);
-    graphics_fill_rect(ctx, GRect(ox+2, oy+6, 4, 1), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(ox+6, oy+6, 3, 1), 0, GCornerNone);
-    graphics_fill_rect(ctx, GRect(ox+1, oy+7, 10, 6), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(ox+2, oy+5, 4, 1), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(ox+6, oy+5, 3, 1), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(ox+1, oy+6, 10, 6), 0, GCornerNone);
   }
 }
 
 static void draw_rain_icon(GContext *ctx, int ox, int oy, GColor col, bool large) {
-  draw_cloud_icon(ctx, ox, oy-1, col, large);
+  draw_cloud_icon(ctx, ox, oy, col, large);
   graphics_context_set_stroke_color(ctx, col);
   graphics_context_set_stroke_width(ctx, 1);
   if (!large) {
-    graphics_draw_pixel(ctx, GPoint(ox+2, oy+7)); graphics_draw_pixel(ctx, GPoint(ox+2, oy+9));
-    graphics_draw_pixel(ctx, GPoint(ox+5, oy+8)); graphics_draw_pixel(ctx, GPoint(ox+5, oy+10));
-    graphics_draw_pixel(ctx, GPoint(ox+8, oy+7)); graphics_draw_pixel(ctx, GPoint(ox+8, oy+9));
+    graphics_draw_pixel(ctx, GPoint(ox+2, oy+8)); graphics_draw_pixel(ctx, GPoint(ox+2, oy+10));
+    graphics_draw_pixel(ctx, GPoint(ox+5, oy+9)); graphics_draw_pixel(ctx, GPoint(ox+5, oy+11));
+    graphics_draw_pixel(ctx, GPoint(ox+8, oy+8)); graphics_draw_pixel(ctx, GPoint(ox+8, oy+10));
   } else {
     graphics_draw_pixel(ctx, GPoint(ox+2, oy+10)); graphics_draw_pixel(ctx, GPoint(ox+2, oy+12));
     graphics_draw_pixel(ctx, GPoint(ox+6, oy+11)); graphics_draw_pixel(ctx, GPoint(ox+6, oy+13));
@@ -338,19 +341,19 @@ static void draw_snow_icon(GContext *ctx, int ox, int oy, GColor col, bool large
 }
 
 static void draw_storm_icon(GContext *ctx, int ox, int oy, GColor col, bool large) {
-  draw_cloud_icon(ctx, ox, oy-1, col, large);
+  draw_cloud_icon(ctx, ox, oy, col, large);
   graphics_context_set_stroke_color(ctx, col);
   graphics_context_set_stroke_width(ctx, 1);
   if (!large) {
-    graphics_draw_pixel(ctx, GPoint(ox+5, oy+6)); graphics_draw_pixel(ctx, GPoint(ox+5, oy+7));
-    graphics_draw_pixel(ctx, GPoint(ox+4, oy+7)); graphics_draw_pixel(ctx, GPoint(ox+4, oy+8));
-    graphics_draw_pixel(ctx, GPoint(ox+6, oy+8)); graphics_draw_pixel(ctx, GPoint(ox+6, oy+9));
-    graphics_draw_pixel(ctx, GPoint(ox+5, oy+9)); graphics_draw_pixel(ctx, GPoint(ox+5, oy+10));
+    graphics_draw_pixel(ctx, GPoint(ox+5, oy+7)); graphics_draw_pixel(ctx, GPoint(ox+5, oy+8));
+    graphics_draw_pixel(ctx, GPoint(ox+4, oy+8)); graphics_draw_pixel(ctx, GPoint(ox+4, oy+9));
+    graphics_draw_pixel(ctx, GPoint(ox+6, oy+9)); graphics_draw_pixel(ctx, GPoint(ox+6, oy+10));
+    graphics_draw_pixel(ctx, GPoint(ox+5, oy+10)); graphics_draw_pixel(ctx, GPoint(ox+5, oy+11));
   } else {
-    graphics_draw_pixel(ctx, GPoint(ox+7, oy+8));  graphics_draw_pixel(ctx, GPoint(ox+7, oy+9));
-    graphics_draw_pixel(ctx, GPoint(ox+6, oy+9));  graphics_draw_pixel(ctx, GPoint(ox+6, oy+10));
-    graphics_draw_pixel(ctx, GPoint(ox+8, oy+10)); graphics_draw_pixel(ctx, GPoint(ox+8, oy+11));
-    graphics_draw_pixel(ctx, GPoint(ox+7, oy+11)); graphics_draw_pixel(ctx, GPoint(ox+7, oy+12));
+    graphics_draw_pixel(ctx, GPoint(ox+7, oy+9));  graphics_draw_pixel(ctx, GPoint(ox+7, oy+10));
+    graphics_draw_pixel(ctx, GPoint(ox+6, oy+10)); graphics_draw_pixel(ctx, GPoint(ox+6, oy+11));
+    graphics_draw_pixel(ctx, GPoint(ox+8, oy+11)); graphics_draw_pixel(ctx, GPoint(ox+8, oy+12));
+    graphics_draw_pixel(ctx, GPoint(ox+7, oy+12)); graphics_draw_pixel(ctx, GPoint(ox+7, oy+13));
   }
 }
 
@@ -368,7 +371,6 @@ static void draw_weather_icon(GContext *ctx, int ox, int oy, GColor col, int ico
 
 // ============================================================
 // OVERLAY FIELD DRAWING
-// font, icon_w, font_pad vary by overlay size.
 // ============================================================
 static void draw_field(GContext *ctx, int field, int y, int w, int cx,
                        GColor col, GColor bg, bool large) {
@@ -377,7 +379,7 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
   GFont font     = large
     ? fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD)
     : fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-  int   font_h   = large ? 17 : 13;
+  int   font_h   = large ? 14 : 11;
   int   font_pad = large ? LARGE_FONT_PAD : SMALL_FONT_PAD;
   int   icon_w   = large ? LARGE_ICON_W  : SMALL_ICON_W;
   int   iy       = y + font_pad;
@@ -386,15 +388,15 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
 
   if (field == FIELD_DAY_LONG) {
     graphics_draw_text(ctx, s_day_buffer, font,
-      GRect(0, y, w, font_h), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+      GRect(0, y, w, font_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
   } else if (field == FIELD_DATE) {
     graphics_draw_text(ctx, s_date_buffer, font,
-      GRect(0, y, w, font_h), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+      GRect(0, y, w, font_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
   } else if (field == FIELD_DAY_DATE) {
     graphics_draw_text(ctx, s_day_date_buffer, font,
-      GRect(0, y, w, font_h), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+      GRect(0, y, w, font_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
 
   } else if (field == FIELD_STEPS) {
     GSize text_size = graphics_text_layout_get_content_size(
@@ -403,9 +405,10 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
     int unit_w = icon_w + ICON_TEXT_GAP + text_size.w;
     int icon_x = cx - unit_w / 2;
     int text_x = icon_x + icon_w + ICON_TEXT_GAP;
+    // draw_steps_icon has -1 baked in for small; large is flush
     draw_steps_icon(ctx, icon_x, iy, col, large);
     graphics_draw_text(ctx, s_steps_buffer, font,
-      GRect(text_x, y, w - text_x, font_h), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+      GRect(text_x, y, w - text_x, font_h + 2), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 
   } else if (field == FIELD_BATTERY) {
     GSize text_size = graphics_text_layout_get_content_size(
@@ -416,14 +419,14 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
     int text_x = icon_x + icon_w + ICON_TEXT_GAP;
     draw_battery_icon(ctx, icon_x, iy, col, s_battery, large);
     graphics_draw_text(ctx, s_battery_buffer, font,
-      GRect(text_x, y, w - text_x, font_h), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+      GRect(text_x, y, w - text_x, font_h + 2), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
 
   } else if (field == FIELD_TEMP_F || field == FIELD_TEMP_C) {
     bool is_f  = (field == FIELD_TEMP_F);
     bool ready = is_f ? (s_weather_temp_f != INT_MIN) : (s_weather_temp_c != INT_MIN);
     if (!ready) {
       graphics_draw_text(ctx, "--", font,
-        GRect(0, y, w, font_h), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
+        GRect(0, y, w, font_h + 2), GTextOverflowModeFill, GTextAlignmentCenter, NULL);
     } else {
       const char *temp_str = is_f ? s_temp_f_buffer : s_temp_c_buffer;
       GSize text_size = graphics_text_layout_get_content_size(
@@ -432,9 +435,11 @@ static void draw_field(GContext *ctx, int field, int y, int w, int cx,
       int unit_w = icon_w + ICON_TEXT_GAP + text_size.w;
       int icon_x = cx - unit_w / 2;
       int text_x = icon_x + icon_w + ICON_TEXT_GAP;
-      draw_weather_icon(ctx, icon_x, iy - 1, col, weather_icon_for_code(s_weather_code), large);
+      // Small: -1 aligns icon top with text cap; large: 0 (icon fits flush in 14px)
+      int icon_y_off = large ? 0 : -1;
+      draw_weather_icon(ctx, icon_x, iy + icon_y_off, col, weather_icon_for_code(s_weather_code), large);
       graphics_draw_text(ctx, temp_str, font,
-        GRect(text_x, y, w - text_x, font_h), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
+        GRect(text_x, y, w - text_x, font_h + 2), GTextOverflowModeFill, GTextAlignmentLeft, NULL);
     }
   }
 }
@@ -457,9 +462,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   bool large = (s_settings.OverlaySize == OVERLAY_LARGE);
 
-  // ----------------------------------------------------------
-  // EFFECTIVE COLORS
-  // ----------------------------------------------------------
 #if defined(PBL_BW)
   GColor bw_lit    = s_settings.InvertBW ? GColorBlack     : GColorWhite;
   GColor bw_dim    = s_settings.InvertBW ? GColorLightGray : GColorDarkGray;
@@ -499,9 +501,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   GColor col_l4       = s_settings.InfoLine4Color;
 #endif
 
-  // ----------------------------------------------------------
-  // LAYOUT
-  // ----------------------------------------------------------
   bool show_ring  = s_settings.ShowRing;
   int  inset      = show_ring ? (RING_THICK + RING_GAP) : 0;
   GRect tick_rect = GRect(inset, inset, w - 2*inset, h - 2*inset);
@@ -519,9 +518,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   graphics_context_set_stroke_width(ctx, 0);
 
-  // ----------------------------------------------------------
-  // BACKGROUND
-  // ----------------------------------------------------------
   graphics_context_set_fill_color(ctx, col_bg);
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
@@ -801,8 +797,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   }
 
   // ----------------------------------------------------------
-  // CENTER OVERLAY CIRCLE
-  // Small: 58px. Large: 70px.
+  // CENTER OVERLAY CIRCLE - Small: 58px, Large: 70px
   // ----------------------------------------------------------
   int overlay_r = large ? 70 : 58;
   if (prv_overlay_visible()) {
@@ -810,9 +805,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     graphics_fill_circle(ctx, GPoint(cx, cy), overlay_r);
   }
 
-  // ----------------------------------------------------------
-  // INNER GAP STRIP (rect only)
-  // ----------------------------------------------------------
 #if !defined(PBL_ROUND)
   if (show_ring) {
     int strip = RING_THICK + RING_GAP;
@@ -824,9 +816,6 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   }
 #endif
 
-  // ----------------------------------------------------------
-  // OUTER RING
-  // ----------------------------------------------------------
   if (show_ring) {
     int step_pct = (s_settings.StepGoal > 0)
       ? (s_steps * 100) / s_settings.StepGoal : 0;
@@ -915,28 +904,39 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   // ----------------------------------------------------------
   // TEXT / FIELD OVERLAY
-  // Small: LECO_36/GOTHIC_18, circle 58, cap 11, gap 6, stride 17
-  // Large: LECO_42/GOTHIC_24, circle 70, cap 15, gap 8, stride 23
-  //        time_y shifted up 6px extra to center content in 70px circle
+  //
+  // Small: LECO_36/GOTHIC_18, circle 58px
+  //   time_y = cy - 23  (1px higher)
+  //   single line offset 12px, multi gap 6px, stride 17
+  //
+  // Large: LECO_42/GOTHIC_24, circle 70px
+  //   time_y = cy - 27
+  //   single line offset 16px, multi gap 7px, stride 21
+  //   top block: -2px nudge, bottom block: -7px nudge
   // ----------------------------------------------------------
   if (prv_overlay_visible()) {
-    int time_h, cap_h, gap, stride;
+    int time_h, cap_h, line_gap, stride, single_offset;
     GFont time_font;
-    if (large) {
-      time_font = fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS);
-      time_h = 52;
-      cap_h  = 15;
-      gap    = 8;
-    } else {
-      time_font = fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS);
-      time_h = 40;
-      cap_h  = 11;
-      gap    = 6;
-    }
-    stride = cap_h + gap;
 
-    // Large: shift entire content block up 6px to better center in 70px circle
-    int time_y    = cy - time_h / 2 - 2 - (large ? 6 : 0);
+    if (large) {
+      time_font     = fonts_get_system_font(FONT_KEY_LECO_42_NUMBERS);
+      time_h        = 52;
+      cap_h         = 14;
+      line_gap      = 7;
+      single_offset = 16;
+    } else {
+      time_font     = fonts_get_system_font(FONT_KEY_LECO_36_BOLD_NUMBERS);
+      time_h        = 40;
+      cap_h         = 11;
+      line_gap      = 6;
+      single_offset = 12;
+    }
+    stride = cap_h + line_gap;
+
+    int time_y = large
+      ? (cy - time_h / 2 - 1)
+      : (cy - time_h / 2 - 3);
+
     int top_inner = s_settings.TopInnerField;
     int top_outer = s_settings.TopOuterField;
     int bot_inner = s_settings.BottomInnerField;
@@ -953,9 +953,10 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     if (top_count == 1) {
       int field = top_inner ? top_inner : top_outer;
       GColor col = top_inner ? col_l2 : col_l1;
-      draw_field(ctx, field, time_y - (cap_h + gap + 2), w, cx, col, col_obg, large);
+      draw_field(ctx, field, time_y - single_offset - cap_h, w, cx, col, col_obg, large);
     } else if (top_count == 2) {
-      int inner_y = time_y - font_pad - gap + 1;
+      int top_nudge = large ? -2 : 0;
+      int inner_y = time_y - font_pad - line_gap + 1 + top_nudge;
       int outer_y = inner_y - stride;
       draw_field(ctx, top_inner, inner_y, w, cx, col_l2, col_obg, large);
       draw_field(ctx, top_outer, outer_y, w, cx, col_l1, col_obg, large);
@@ -964,9 +965,10 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     if (bot_count == 1) {
       int field = bot_inner ? bot_inner : bot_outer;
       GColor col = bot_inner ? col_l3 : col_l4;
-      draw_field(ctx, field, time_y + time_h + 2, w, cx, col, col_obg, large);
+      draw_field(ctx, field, time_y + time_h + single_offset - cap_h, w, cx, col, col_obg, large);
     } else if (bot_count == 2) {
-      int inner_y = time_y + time_h + gap - font_pad - 3;
+      int bot_nudge = large ? -7 : 0;
+      int inner_y = time_y + time_h + line_gap - font_pad - 3 + bot_nudge;
       int outer_y = inner_y + stride;
       draw_field(ctx, bot_inner, inner_y, w, cx, col_l3, col_obg, large);
       draw_field(ctx, bot_outer, outer_y, w, cx, col_l4, col_obg, large);
