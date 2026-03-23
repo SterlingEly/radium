@@ -59,7 +59,7 @@ typedef struct {
   GColor InfoLine2Color;  // top inner
   GColor InfoLine3Color;  // bottom inner
   GColor InfoLine4Color;  // bottom outer
-  int    OverlaySize;     // 0=small, 1=large (emery/gabbro)
+  int    OverlaySize;     // 0=small, 1=large (emery/gabbro only)
 } RadiumSettings;
 
 static RadiumSettings s_settings;
@@ -111,8 +111,8 @@ static void prv_default_settings(void) {
   s_settings.TopInnerField    = FIELD_DAY_LONG;
   s_settings.BottomInnerField = FIELD_DATE;
   s_settings.BottomOuterField = FIELD_STEPS;
-  // Large overlay default on emery/gabbro, small elsewhere
-#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_CHALK)
+  // Large overlay default on emery and gabbro (Round 2); small everywhere else
+#if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
   s_settings.OverlaySize = OVERLAY_LARGE;
 #else
   s_settings.OverlaySize = OVERLAY_SMALL;
@@ -211,7 +211,6 @@ static int weather_icon_for_code(int code) {
 // ICON DRAWING
 // Small icons: 11x11px (GOTHIC_18_BOLD cap = 11px)
 // Large icons: 15x15px (GOTHIC_24_BOLD cap = 15px)
-// ICON_W / ICON_TEXT_GAP are set per draw_field call based on size.
 // ============================================================
 #define SMALL_FONT_PAD   8
 #define LARGE_FONT_PAD   10
@@ -225,7 +224,6 @@ static void draw_footprint(GContext *ctx, int fx, int fy, GColor col, bool large
     graphics_fill_rect(ctx, GRect(fx, fy, 4, 5), 2, GCornersAll);
     graphics_fill_rect(ctx, GRect(fx+1, fy+4, 2, 4), 1, GCornersAll);
   } else {
-    // Scaled up ~35%: 5x7 toe + 3x5 heel
     graphics_fill_rect(ctx, GRect(fx, fy, 5, 7), 2, GCornersAll);
     graphics_fill_rect(ctx, GRect(fx+1, fy+6, 3, 5), 1, GCornersAll);
   }
@@ -370,9 +368,6 @@ static void draw_weather_icon(GContext *ctx, int ox, int oy, GColor col, int ico
 
 // ============================================================
 // OVERLAY FIELD DRAWING
-//
-// All icon+text fields use dynamic centering:
-//   text width measured, unit centered on cx.
 // font, icon_w, font_pad vary by overlay size.
 // ============================================================
 static void draw_field(GContext *ctx, int field, int y, int w, int cx,
@@ -807,9 +802,9 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   // ----------------------------------------------------------
   // CENTER OVERLAY CIRCLE
-  // Small: 58px radius. Large: 80px radius.
+  // Small: 58px. Large: 70px.
   // ----------------------------------------------------------
-  int overlay_r = large ? 80 : 58;
+  int overlay_r = large ? 70 : 58;
   if (prv_overlay_visible()) {
     graphics_context_set_fill_color(ctx, col_obg);
     graphics_fill_circle(ctx, GPoint(cx, cy), overlay_r);
@@ -921,7 +916,8 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   // ----------------------------------------------------------
   // TEXT / FIELD OVERLAY
   // Small: LECO_36/GOTHIC_18, circle 58, cap 11, gap 6, stride 17
-  // Large: LECO_42/GOTHIC_24, circle 80, cap 15, gap 8, stride 23
+  // Large: LECO_42/GOTHIC_24, circle 70, cap 15, gap 8, stride 23
+  //        time_y shifted up 6px extra to center content in 70px circle
   // ----------------------------------------------------------
   if (prv_overlay_visible()) {
     int time_h, cap_h, gap, stride;
@@ -939,7 +935,8 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
     stride = cap_h + gap;
 
-    int time_y    = cy - time_h / 2 - 2;
+    // Large: shift entire content block up 6px to better center in 70px circle
+    int time_y    = cy - time_h / 2 - 2 - (large ? 6 : 0);
     int top_inner = s_settings.TopInnerField;
     int top_outer = s_settings.TopOuterField;
     int bot_inner = s_settings.BottomInnerField;
