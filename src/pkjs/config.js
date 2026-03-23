@@ -111,6 +111,12 @@ module.exports = {
       return '<select id="' + id + '" style="background:#242424;color:#ddd;border:1px solid #333;border-radius:6px;padding:6px 8px;font-size:14px;flex:1">' + opts + '</select>';
     }
 
+    // Large overlay toggle only shown for emery and gabbro (chalk = gabbro round)
+    var isLargePlatform = (platform === 'emery' || platform === 'chalk');
+    var overlayLargeRow = isLargePlatform
+      ? '<div class="row"><label>Large overlay</label><label class="toggle"><input type="checkbox" id="OverlaySize"><span class="knob"></span></label></div>'
+      : '';
+
     var platformData = 'var PLATFORM=' + JSON.stringify(platform || 'color') + ';'
       + 'var CURRENT=' + JSON.stringify(currentSettings || null) + ';';
     var presetsData = 'var PRESETS=' + JSON.stringify(presets) + ';';
@@ -230,7 +236,7 @@ module.exports = {
       + '<input type="radio" name="overlay" id="ov1" value="1"><label for="ov1">Always Off</label>'
       + '<input type="radio" name="overlay" id="ov2" value="2"><label for="ov2">Shake</label>'
       + '</div>'
-      + '<div class="row"><label>Large overlay (Emery / Gabbro)</label><label class="toggle"><input type="checkbox" id="OverlaySize"><span class="knob"></span></label></div>'
+      + overlayLargeRow
       + '</div>'
 
       + '<h2>Info Lines</h2><div class="card">'
@@ -369,7 +375,7 @@ module.exports = {
       + 'try{if(!CURRENT)return;'
       + 'Object.keys(CURRENT).forEach(function(k){'
       + 'if(k==="OverlayMode"){var el=document.getElementById("ov"+CURRENT[k]);if(el)el.checked=true;}'
-      + 'else if(k==="OverlaySize"){document.getElementById("OverlaySize").checked=(CURRENT[k]===1);}'
+      + 'else if(k==="OverlaySize"){var el=document.getElementById("OverlaySize");if(el)el.checked=(CURRENT[k]===1);}'
       + 'else if(k==="InvertBW"){document.getElementById("InvertBW").checked=!!CURRENT[k];}'
       + 'else if(k==="ShowRing"){document.getElementById("ShowRing").checked=!!CURRENT[k];}'
       + 'else if(k==="StepGoal"){var el=document.getElementById("StepGoal");el.value=CURRENT[k];document.getElementById("goalVal").textContent=parseInt(CURRENT[k]).toLocaleString();}'
@@ -395,7 +401,7 @@ module.exports = {
       + 'updateSwatches("InfoLine3Color",p.dt);updateSwatches("InfoLine4Color",p.dt);}'
 
       + 'function h(hex){return parseInt(hex.slice(1),16);}'
-      + 'function tog(id){return document.getElementById(id).checked?1:0;}'
+      + 'function tog(id){var el=document.getElementById(id);return el&&el.checked?1:0;}'
       + 'function sel(id){return parseInt(document.getElementById(id).value)||0;}'
 
       + 'function save(){'
