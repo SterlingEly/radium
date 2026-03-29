@@ -139,11 +139,12 @@ static void prv_default_settings(void) {
   s_settings.ShowRing    = true;
 #endif
 
-  // Default info line layout: blank / day / date / blank
-  s_settings.Line1Field  = FIELD_NONE;
+  // Default info lines: distance / day / date / calories
+  // (shows all four icon fields on fresh install for easy icon verification)
+  s_settings.Line1Field  = FIELD_DISTANCE;
   s_settings.Line2Field  = FIELD_DAY_LONG;
   s_settings.Line3Field  = FIELD_DATE;
-  s_settings.Line4Field  = FIELD_NONE;
+  s_settings.Line4Field  = FIELD_CALORIES;
 
   // Large overlay on emery/gabbro (high-res); small on all others
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
@@ -1153,11 +1154,13 @@ static void update_health_data(void) {
     ? (int)health_service_sum_today(HealthMetricStepCount) : 0;
   update_steps_buffer();
 
-  // Distance: convert meters to mi or km based on system locale
+  // Distance: convert meters to mi or km.
+  // i18n_get_locale() returns "en_US" for US English — the only Pebble locale
+  // that uses imperial. All other locales get metric.
   mask = health_service_metric_accessible(HealthMetricWalkedDistanceMeters, start, now);
   s_distance_m = (mask & HealthServiceAccessibilityMaskAvailable)
     ? (int)health_service_sum_today(HealthMetricWalkedDistanceMeters) : 0;
-  if (measurement_system_get_units(MeasurementSystemDistance) == UnitsImperial) {
+  if (strcmp(i18n_get_locale(), "en_US") == 0) {
     int miles_x10 = (s_distance_m * 10) / 1609;  // tenths of a mile
     snprintf(s_distance_buffer, sizeof(s_distance_buffer),
              "%d.%dmi", miles_x10 / 10, miles_x10 % 10);
