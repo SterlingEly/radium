@@ -1155,12 +1155,12 @@ static void update_health_data(void) {
   update_steps_buffer();
 
   // Distance: convert meters to mi or km.
-  // i18n_get_locale() returns "en_US" for US English — the only Pebble locale
-  // that uses imperial. All other locales get metric.
+  // i18n_get_system_locale() returns "en_US" for US English — the only Pebble
+  // locale that uses imperial units. All other locales get metric.
   mask = health_service_metric_accessible(HealthMetricWalkedDistanceMeters, start, now);
   s_distance_m = (mask & HealthServiceAccessibilityMaskAvailable)
     ? (int)health_service_sum_today(HealthMetricWalkedDistanceMeters) : 0;
-  if (strcmp(i18n_get_locale(), "en_US") == 0) {
+  if (strcmp(i18n_get_system_locale(), "en_US") == 0) {
     int miles_x10 = (s_distance_m * 10) / 1609;  // tenths of a mile
     snprintf(s_distance_buffer, sizeof(s_distance_buffer),
              "%d.%dmi", miles_x10 / 10, miles_x10 % 10);
