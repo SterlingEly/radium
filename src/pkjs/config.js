@@ -19,11 +19,12 @@ module.exports = {
     // ----------------------------------------------------------------
     var presets = [
       // ---- DARK (8) — Radium first, then the 2015 tweet schemes ----
+      // Radium v2.2: ticks/ring=#00ff00 (GColorGreen), tips=#aaffaa (GColorMintGreen)
       { label:'Radium',  bg:'#000000',obg:'#000000',tt:'#ffffff',
-        lH:'#aaffaa',lM:'#aaffaa',lB:'#aaffaa',lS:'#aaffaa',
+        lH:'#00ff00',lM:'#00ff00',lB:'#00ff00',lS:'#00ff00',
         dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500',
-        tH:'#ffffff',tM:'#ffffff',
-        l1:'#aaaaaa',l2:'#aaffaa',l3:'#aaffaa',l4:'#aaaaaa' },
+        tH:'#aaffaa',tM:'#aaffaa',
+        l1:'#00ff00',l2:'#aaffaa',l3:'#aaffaa',l4:'#00ff00' },
       { label:'Scarlet', bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff0000',lM:'#ff0000',lB:'#ff0000',lS:'#ff0000',
         dH:'#550000',dM:'#550000',dB:'#550000',dS:'#550000',
@@ -343,7 +344,7 @@ module.exports = {
       + '.field-row:last-child{border-bottom:none}'
       + '.field-row label{font-size:14px;color:#aaa;white-space:nowrap;min-width:60px}'
       + '.swatch{width:32px;height:24px;border-radius:4px;cursor:pointer;border:2px solid #333;flex-shrink:0}'
-      // Top-level expand rows: bold, uppercase, full white — these are the 4 main color groups
+      // Top-level expand rows: bold, uppercase, full white
       + '.expand-row{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #222;cursor:pointer;user-select:none}'
       + '.expand-row:last-child{border-bottom:none}'
       + '.expand-row label{font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em;color:#fff;flex:1;cursor:pointer}'
@@ -422,17 +423,17 @@ module.exports = {
       + '</div>'
 
       + '<h2>Info Lines</h2><div class="card">'
-      + '<div class="field-row"><label>Line 1</label>' + makeSelect('Line1Field', 8, fieldOptionsOuter) + '</div>'
+      + '<div class="field-row"><label>Line 1</label>' + makeSelect('Line1Field', 0, fieldOptionsOuter) + '</div>'
       + '<div class="field-row"><label>Line 2</label>' + makeSelect('Line2Field', 1, fieldOptionsInner) + '</div>'
       + '<div class="field-row"><label>Line 3</label>' + makeSelect('Line3Field', 2, fieldOptionsInner) + '</div>'
-      + '<div class="field-row"><label>Line 4</label>' + makeSelect('Line4Field', 9, fieldOptionsOuter) + '</div>'
+      + '<div class="field-row"><label>Line 4</label>' + makeSelect('Line4Field', 0, fieldOptionsOuter) + '</div>'
       + '</div>'
 
       + '<div id="color-section">'
       + '<h2>Presets</h2><div class="card"><div class="presets">' + presetsHtml + '</div></div>'
       + '<h2>Colors</h2><div class="card">'
 
-      // Text group: Time + Info Lines 1-4
+      // Text group
       + '<div class="expand-row" onclick="toggle(\'text\')"><label>Text</label><div class="right"><div class="swatch" id="sw-TextAll" onclick="openPicker(\'TextAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-text">+</span></div></div>'
       + '<div class="sub-rows" id="sub-text">'
       + '<div class="sub-row"><label>Time</label><div class="swatch" id="sw-TimeColor" onclick="openPicker(\'TimeColor\')"></div></div>'
@@ -475,7 +476,7 @@ module.exports = {
       + '<div class="sub-sub-row"><label>Steps</label><div class="swatch" id="sw-DimStepsColor" onclick="openPicker(\'DimStepsColor\')"></div></div>'
       + '</div></div>'
 
-      // Base group: Overlay + Background
+      // Base group
       + '<div class="expand-row" onclick="toggle(\'base\')"><label>Base</label><div class="right"><div class="swatch" id="sw-BaseAll" onclick="openPicker(\'BaseAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-base">+</span></div></div>'
       + '<div class="sub-rows" id="sub-base">'
       + '<div class="sub-row"><label>Overlay</label><div class="swatch" id="sw-OverlayColor" onclick="openPicker(\'OverlayColor\')"></div></div>'
@@ -510,13 +511,13 @@ module.exports = {
       + '<script>'
       + platformData + presetsData + paletteData
 
-      // Default colors = Radium preset
+      // Default colors = Radium v2.2 preset
       + 'var colors={'
       + 'BackgroundColor:"#000000",OverlayColor:"#000000",TimeColor:"#ffffff",'
-      + 'LitHourColor:"#aaffaa",LitMinuteColor:"#aaffaa",LitBatteryColor:"#aaffaa",LitStepsColor:"#aaffaa",'
+      + 'LitHourColor:"#00ff00",LitMinuteColor:"#00ff00",LitBatteryColor:"#00ff00",LitStepsColor:"#00ff00",'
       + 'DimHourColor:"#005500",DimMinuteColor:"#005500",DimBatteryColor:"#005500",DimStepsColor:"#005500",'
-      + 'HourTipColor:"#ffffff",MinuteTipColor:"#ffffff",'
-      + 'Line1Color:"#aaaaaa",Line2Color:"#aaffaa",Line3Color:"#aaffaa",Line4Color:"#aaaaaa"'
+      + 'HourTipColor:"#aaffaa",MinuteTipColor:"#aaffaa",'
+      + 'Line1Color:"#00ff00",Line2Color:"#aaffaa",Line3Color:"#aaffaa",Line4Color:"#00ff00"'
       + '};'
 
       + 'function updateSwatches(key,hex){'
@@ -535,9 +536,6 @@ module.exports = {
       + 'setQuad("sw-InfoLinesAll",colors.Line1Color,colors.Line2Color,colors.Line3Color,colors.Line4Color);'
       + '}'
 
-      // cascadeMap: picking a parent cascades color to all logical children.
-      // LitHourColor/LitMinuteColor also set their respective leading tip.
-      // LitTicks sets hours + minutes + both tips.
       + 'var cascadeMap={'
       + '"LitAll":["LitHourColor","LitMinuteColor","LitBatteryColor","LitStepsColor","HourTipColor","MinuteTipColor"],'
       + '"LitTicks":["LitHourColor","LitMinuteColor","HourTipColor","MinuteTipColor"],'

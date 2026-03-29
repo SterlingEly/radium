@@ -94,23 +94,25 @@ static void prv_default_settings(void) {
   s_settings.OverlayColor    = GColorBlack;
 
 #if defined(PBL_COLOR)
-  // Radium preset defaults: ticks/ring = MintGreen, dim = DarkGreen, tips/time = White
-  // Outer lines (1,4) = subdued gray; inner lines (2,3) = mint to echo ticks
+  // Radium preset defaults (v2.2):
+  //   ticks/ring = GColorGreen (#00ff00), tips = GColorMintGreen (#aaffaa)
+  //   dim = GColorDarkGreen (#005500)
+  //   outer lines (1,4) = GColorGreen; inner lines (2,3) = GColorMintGreen
   s_settings.TimeColor         = GColorWhite;
-  s_settings.LitHourColor      = GColorMintGreen;
-  s_settings.LitMinuteColor    = GColorMintGreen;
-  s_settings.LitBatteryColor   = GColorMintGreen;
-  s_settings.LitStepsColor     = GColorMintGreen;
+  s_settings.LitHourColor      = GColorGreen;
+  s_settings.LitMinuteColor    = GColorGreen;
+  s_settings.LitBatteryColor   = GColorGreen;
+  s_settings.LitStepsColor     = GColorGreen;
   s_settings.DimHourColor      = GColorDarkGreen;
   s_settings.DimMinuteColor    = GColorDarkGreen;
   s_settings.DimBatteryColor   = GColorDarkGreen;
   s_settings.DimStepsColor     = GColorDarkGreen;
-  s_settings.HourTipColor      = GColorWhite;
-  s_settings.MinuteTipColor    = GColorWhite;
-  s_settings.Line1Color        = GColorLightGray;
+  s_settings.HourTipColor      = GColorMintGreen;
+  s_settings.MinuteTipColor    = GColorMintGreen;
+  s_settings.Line1Color        = GColorGreen;
   s_settings.Line2Color        = GColorMintGreen;
   s_settings.Line3Color        = GColorMintGreen;
-  s_settings.Line4Color        = GColorLightGray;
+  s_settings.Line4Color        = GColorGreen;
 #else
   s_settings.TimeColor         = GColorWhite;
   s_settings.LitHourColor      = GColorWhite;
@@ -139,12 +141,11 @@ static void prv_default_settings(void) {
   s_settings.ShowRing    = true;
 #endif
 
-  // Default info lines: distance / day / date / calories
-  // (shows all four icon fields on fresh install for easy icon verification)
-  s_settings.Line1Field  = FIELD_DISTANCE;
+  // Default info line layout: blank / day / date / blank
+  s_settings.Line1Field  = FIELD_NONE;
   s_settings.Line2Field  = FIELD_DAY_LONG;
   s_settings.Line3Field  = FIELD_DATE;
-  s_settings.Line4Field  = FIELD_CALORIES;
+  s_settings.Line4Field  = FIELD_NONE;
 
   // Large overlay on emery/gabbro (high-res); small on all others
 #if defined(PBL_PLATFORM_EMERY) || defined(PBL_PLATFORM_GABBRO)
@@ -258,8 +259,8 @@ static int weather_icon_for_code(int code) {
 // ICON DRAWING
 //
 // All icons exist in two sizes:
-//   Small (OVERLAY_SMALL): 11×11px, paired with GOTHIC_18_BOLD (cap height 11px)
-//   Large (OVERLAY_LARGE): 14×14px, paired with GOTHIC_24_BOLD (cap height 14px)
+//   Small (OVERLAY_SMALL): 11x11px, paired with GOTHIC_18_BOLD (cap height 11px)
+//   Large (OVERLAY_LARGE): 14x14px, paired with GOTHIC_24_BOLD (cap height 14px)
 //
 // Icons are drawn at iy = y + font_pad so their top aligns with the text cap.
 // ============================================================
@@ -295,7 +296,7 @@ static void draw_battery_icon(GContext *ctx, int ox, int oy, GColor col, int pct
   graphics_context_set_stroke_color(ctx, col);
   graphics_context_set_stroke_width(ctx, 1);
   if (!large) {
-    // 11px: 9×7 body at oy+2, 2×3 nub at right
+    // 11px: 9x7 body at oy+2, 2x3 nub at right
     graphics_draw_rect(ctx, GRect(ox, oy+2, 9, 7));
     graphics_context_set_fill_color(ctx, col);
     graphics_fill_rect(ctx, GRect(ox+9, oy+4, 2, 3), 0, GCornerNone);
@@ -303,7 +304,7 @@ static void draw_battery_icon(GContext *ctx, int ox, int oy, GColor col, int pct
     if (fill_w < 1 && pct > 0) fill_w = 1;
     if (fill_w > 0) graphics_fill_rect(ctx, GRect(ox+1, oy+3, fill_w, 5), 0, GCornerNone);
   } else {
-    // 14px: 12×10 body at oy+1, 2×4 nub at right
+    // 14px: 12x10 body at oy+1, 2x4 nub at right
     graphics_draw_rect(ctx, GRect(ox, oy+1, 12, 10));
     graphics_context_set_fill_color(ctx, col);
     graphics_fill_rect(ctx, GRect(ox+12, oy+4, 2, 4), 0, GCornerNone);
@@ -314,16 +315,18 @@ static void draw_battery_icon(GContext *ctx, int ox, int oy, GColor col, int pct
 }
 
 // Stylized flame: wide rounded base tapering to a single-pixel tip.
+// Small (11px): tip=oy+0, upper=oy+1..4, mid=oy+4..7, base=oy+7..9  (fits 0-10)
+// Large (14px): tip=oy+0, upper=oy+2..5, mid=oy+5..9, base=oy+9..13 (fits 0-13)
 static void draw_calories_icon(GContext *ctx, int ox, int oy, GColor col, bool large) {
   graphics_context_set_fill_color(ctx, col);
   if (!large) {
-    // 11px
-    graphics_fill_rect(ctx, GRect(ox+2, oy+7, 7, 4), 2, GCornersBottom); // base
+    // 11px slot (rows 0-10): base h reduced to 3 so bottom lands at oy+9
+    graphics_fill_rect(ctx, GRect(ox+2, oy+7, 7, 3), 2, GCornersBottom); // base
     graphics_fill_rect(ctx, GRect(ox+3, oy+4, 5, 4), 0, GCornerNone);   // mid
     graphics_fill_rect(ctx, GRect(ox+4, oy+1, 3, 4), 0, GCornerNone);   // upper
     graphics_fill_rect(ctx, GRect(ox+5, oy+0, 1, 2), 0, GCornerNone);   // tip
   } else {
-    // 14px
+    // 14px slot (rows 0-13)
     graphics_fill_rect(ctx, GRect(ox+2, oy+9,  10, 5), 2, GCornersBottom);
     graphics_fill_rect(ctx, GRect(ox+3, oy+5,  8,  5), 0, GCornerNone);
     graphics_fill_rect(ctx, GRect(ox+5, oy+2,  4,  4), 0, GCornerNone);
@@ -375,7 +378,7 @@ static void draw_partly_cloudy_icon(GContext *ctx, int ox, int oy, GColor col, b
     graphics_fill_rect(ctx, GRect(ox+5, oy+4, 2, 1), 0, GCornerNone);
     graphics_fill_rect(ctx, GRect(ox+1, oy+5, 7, 4), 0, GCornerNone);
   } else {
-    // 14px: sun rows 0–7, cloud rows 5–13
+    // 14px: sun rows 0-7, cloud rows 5-13
     graphics_draw_circle(ctx, GPoint(ox+10, oy+3), 3);
     graphics_draw_pixel(ctx, GPoint(ox+10, oy));
     graphics_draw_pixel(ctx, GPoint(ox+14, oy+3));
@@ -697,7 +700,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
     }
 #endif
 
-    // ---- Hour ticks (183°–357°, bottom half) ----
+    // ---- Hour ticks (183-357, bottom half) ----
     bool is_24h       = clock_is_24h_style();
     int  filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
     int  filled_half  = s_hour % 2;  // for 24h: 1 = first half of current slot is lit
@@ -726,7 +729,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       int a = 183 + 15*h2;
       draw_wedge(ctx, cx, cy, radius, DEG_TO_TRIGANGLE(a + 9), DEG_TO_TRIGANGLE(a + 10));
     }
-    // 24h: cut each 9° slot into two 3° half-slots with a 3° gap between them
+    // 24h: cut each 9-degree slot into two 3-degree half-slots with a 3-degree gap
     if (is_24h) {
       for (int h2 = 0; h2 < 12; h2++) {
         int a = 183 + 15*h2 + 3;
@@ -839,7 +842,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
                              DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 9));
       }
       if (is_24h) {
-        // 24h: cut 3° gap in center of each dim slot
+        // 24h: cut 3-degree gap in center of each dim slot
         graphics_context_set_fill_color(ctx, col_bg);
         for (int h2 = 0; h2 < 12; h2++) {
           int a = 183 + 15*h2 + 3;
