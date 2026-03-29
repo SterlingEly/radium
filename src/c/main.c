@@ -17,23 +17,23 @@
 
 #define OVERLAY_AUTO_HIDE_MS  60000  // auto-hide timeout for OVERLAY_AUTO mode (ms)
 
-// Overlay sizes — large is default on emery/gabbro (high-res screens)
+// Overlay sizes -- large is default on emery/gabbro (high-res screens)
 #define OVERLAY_SMALL  0
 #define OVERLAY_LARGE  1
 
-// Info line field IDs — what each of the 4 lines can display
+// Info line field IDs -- what each of the 4 lines can display
 #define FIELD_NONE      0
 #define FIELD_DAY_LONG  1  // "SATURDAY"
 #define FIELD_DATE      2  // "MAR 21"
 #define FIELD_DAY_DATE  3  // "SAT MAR 21"
 #define FIELD_STEPS     4  // footprint icon + step count
-#define FIELD_TEMP_F    5  // weather icon + temperature in °F
-#define FIELD_TEMP_C    6  // weather icon + temperature in °C
+#define FIELD_TEMP_F    5  // weather icon + temperature in F
+#define FIELD_TEMP_C    6  // weather icon + temperature in C
 #define FIELD_BATTERY   7  // battery icon + charge %
 #define FIELD_DISTANCE  8  // footprint icon + walked distance (mi or km)
 #define FIELD_CALORIES  9  // flame icon + active kcal burned
 
-// Weather icon types — see weather_icon_for_code() for WMO code mapping
+// Weather icon types -- see weather_icon_for_code() for WMO code mapping
 // 0=sun  1=partly-cloudy  2=cloud  3=rain  4=snow  5=storm
 
 static const char *s_short_days[] = {
@@ -44,30 +44,30 @@ static const char *s_short_days[] = {
 // SETTINGS  (persisted at SETTINGS_KEY)
 // ============================================================
 typedef struct {
-  // Colors — background & overlay circle
+  // Colors -- background & overlay circle
   GColor BackgroundColor;  // watchface background
   GColor OverlayColor;     // center overlay circle fill
 
-  // Colors — time display (LECO digits in center overlay)
+  // Colors -- time display (LECO digits in center overlay)
   GColor TimeColor;
 
-  // Colors — lit tick marks & outer ring arcs
+  // Colors -- lit tick marks & outer ring arcs
   GColor LitHourColor;
   GColor LitMinuteColor;
   GColor LitBatteryColor;
   GColor LitStepsColor;
 
-  // Colors — unlit (dim) tick marks & ring arcs
+  // Colors -- unlit (dim) tick marks & ring arcs
   GColor DimHourColor;
   GColor DimMinuteColor;
   GColor DimBatteryColor;
   GColor DimStepsColor;
 
-  // Colors — leading-tick highlights (current hour/minute tick)
+  // Colors -- leading-tick highlights (current hour/minute tick)
   GColor HourTipColor;    // independently colorable; cascades from LitHourColor
   GColor MinuteTipColor;  // independently colorable; cascades from LitMinuteColor
 
-  // Colors — info lines (1=top-outer, 2=top-inner, 3=bot-inner, 4=bot-outer)
+  // Colors -- info lines (1=top-outer, 2=top-inner, 3=bot-inner, 4=bot-outer)
   GColor Line1Color;
   GColor Line2Color;
   GColor Line3Color;
@@ -178,7 +178,7 @@ static int  s_distance_m = 0;  // walked distance in meters (today)
 static int  s_calories   = 0;  // active kcal burned (today)
 static bool s_show_overlay = true;
 
-// Weather — INT_MIN signals "not yet received from phone"
+// Weather -- INT_MIN signals "not yet received from phone"
 static int  s_weather_temp_f = INT_MIN;
 static int  s_weather_temp_c = INT_MIN;
 static int  s_weather_code   = 0;
@@ -203,7 +203,7 @@ static GPoint    s_tri_pts[3];
 static GPathInfo s_tri_info = { .num_points = 3, .points = s_tri_pts };
 static GPath    *s_tri_path = NULL;
 
-// Forward declaration — prv_overlay_auto_hide is called from inbox_received
+// Forward declaration -- prv_overlay_auto_hide is called from inbox_received
 // but defined after it, so we need this to satisfy the compiler.
 static void prv_overlay_auto_hide(void *context);
 
@@ -229,7 +229,7 @@ static bool prv_overlay_visible(void) {
   return (s_settings.OverlayMode != OVERLAY_OFF) && s_show_overlay;
 }
 
-// Fill a triangle wedge from center outward — the primitive for all tick marks.
+// Fill a triangle wedge from center outward -- the primitive for all tick marks.
 static void draw_wedge(GContext *ctx, int cx, int cy, int radius,
                        int32_t a1, int32_t a2) {
   s_tri_pts[0] = GPoint(cx, cy);
@@ -270,7 +270,7 @@ static int weather_icon_for_code(int code) {
 #define LARGE_ICON_W    14
 #define ICON_TEXT_GAP   2
 
-// Two overlapping footprints — used for both Steps and Distance icons.
+// Two overlapping footprints -- used for both Steps and Distance icons.
 static void draw_footprint(GContext *ctx, int fx, int fy, GColor col, bool large) {
   graphics_context_set_fill_color(ctx, col);
   if (!large) {
@@ -315,12 +315,12 @@ static void draw_battery_icon(GContext *ctx, int ox, int oy, GColor col, int pct
 }
 
 // Stylized flame: wide rounded base tapering to a single-pixel tip.
-// Small (11px): tip=oy+0, upper=oy+1..4, mid=oy+4..7, base=oy+7..9  (fits 0-10)
-// Large (14px): tip=oy+0, upper=oy+2..5, mid=oy+5..9, base=oy+9..13 (fits 0-13)
+// Small (11px): tip=oy+0..1, upper=oy+1..4, mid=oy+4..7, base=oy+7..9 (fits 0-10)
+// Large (14px): tip=oy+0..2, upper=oy+2..5, mid=oy+5..9, base=oy+9..13 (fits 0-13)
 static void draw_calories_icon(GContext *ctx, int ox, int oy, GColor col, bool large) {
   graphics_context_set_fill_color(ctx, col);
   if (!large) {
-    // 11px slot (rows 0-10): base h reduced to 3 so bottom lands at oy+9
+    // 11px slot (rows 0-10): base h=3 so bottom lands at oy+9
     graphics_fill_rect(ctx, GRect(ox+2, oy+7, 7, 3), 2, GCornersBottom); // base
     graphics_fill_rect(ctx, GRect(ox+3, oy+4, 5, 4), 0, GCornerNone);   // mid
     graphics_fill_rect(ctx, GRect(ox+4, oy+1, 3, 4), 0, GCornerNone);   // upper
@@ -496,7 +496,7 @@ static void draw_info_line(GContext *ctx, int field, int y, int w, int cx,
     DRAW_ICON_TEXT(draw_steps_icon(ctx, icon_x, iy, col, large), s_steps_buffer);
 
   } else if (field == FIELD_DISTANCE) {
-    // Footprint icon shared with steps — both represent walking activity
+    // Footprint icon shared with steps -- both represent walking activity
     DRAW_ICON_TEXT(draw_steps_icon(ctx, icon_x, iy, col, large), s_distance_buffer);
 
   } else if (field == FIELD_CALORIES) {
@@ -612,7 +612,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, bounds, 0, GCornerNone);
 
   // ----------------------------------------------------------
-  // TICK MARKS — painter's algorithm: dim all, then lit, then tip
+  // TICK MARKS -- painter's algorithm: dim all, then lit, then tip
   // ----------------------------------------------------------
   if (!is_round) {
     // ---- RECT ----
@@ -814,7 +814,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
                              DEG_TO_TRIGANGLE(a), DEG_TO_TRIGANGLE(a + 1));
       }
 #if defined(PBL_COLOR)
-      // Leading minute tip
+      // Leading minute tip: recolor the last lit tick (s_minute-1), not an extra one
       graphics_context_set_fill_color(ctx, col_min_tip);
       {
         int i = s_minute - 1;
@@ -829,9 +829,19 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       bool is_24h       = clock_is_24h_style();
       int  filled_slots = is_24h ? (s_hour / 2) : ((s_hour % 12) ?: 12);
       int  filled_half  = s_hour % 2;
+
 #if defined(PBL_COLOR)
-      int hour_tip_slot = (filled_half == 1) ? filled_slots
-                        : (filled_slots > 0 ? filled_slots - 1 : 0);
+      // Tip slot: for 12h, always the last lit slot (filled_slots-1).
+      // For 24h, depends on whether we're in the first or second half of an hour.
+      // Bug fix: the 24h formula was incorrectly used for both modes, causing
+      // the tip to paint slot[filled_slots] (an unlit slot) in 12h mode at odd hours.
+      int hour_tip_slot;
+      if (!is_24h) {
+        hour_tip_slot = (filled_slots > 0) ? (filled_slots - 1) : 0;
+      } else {
+        hour_tip_slot = (filled_half == 1) ? filled_slots
+                      : (filled_slots > 0 ? filled_slots - 1 : 0);
+      }
 #endif
 
       // Dim all 12 hour slots
@@ -884,7 +894,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       }
 
 #if defined(PBL_COLOR)
-      // Leading hour tick tip
+      // Leading hour tick tip: recolor the last lit slot, same painter logic as rect.
       if (!is_24h) {
         if (filled_slots > 0) {
           graphics_context_set_fill_color(ctx, col_hour_tip);
@@ -937,7 +947,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 #endif
 
   // ----------------------------------------------------------
-  // OUTER RING — battery (right arc) and steps (left arc)
+  // OUTER RING -- battery (right arc) and steps (left arc)
   // Both arcs fill upward from 6 o'clock toward 12 o'clock.
   // ----------------------------------------------------------
   if (show_ring) {
@@ -986,7 +996,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       graphics_fill_rect(ctx, GRect(w-t,    0,   t,      h), 0, GCornerNone);
       graphics_fill_rect(ctx, GRect(cx+gap, h-t, half_w, t), 0, GCornerNone);
 
-      // Battery lit — fills counter-clockwise from bottom-right corner
+      // Battery lit -- fills counter-clockwise from bottom-right corner
       {
         int filled = total * s_battery / 100;
         graphics_context_set_fill_color(ctx, col_batt);
@@ -1012,7 +1022,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       graphics_fill_rect(ctx, GRect(0,   0,   t,      h), 0, GCornerNone);
       graphics_fill_rect(ctx, GRect(0,   h-t, half_w, t), 0, GCornerNone);
 
-      // Steps lit — fills counter-clockwise from bottom-left corner
+      // Steps lit -- fills counter-clockwise from bottom-left corner
       if (step_pct > 0) {
         int filled = total * step_pct / 100;
         graphics_context_set_fill_color(ctx, col_step);
@@ -1035,7 +1045,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   }
 
   // ----------------------------------------------------------
-  // CENTER OVERLAY — time + 4 info lines
+  // CENTER OVERLAY -- time + 4 info lines
   //
   // SMALL (58px radius, LECO_36_BOLD + GOTHIC_18_BOLD):
   //   cap_h=11  line_gap=6  stride=17  single_offset=12
@@ -1158,7 +1168,7 @@ static void update_health_data(void) {
   update_steps_buffer();
 
   // Distance: convert meters to mi or km.
-  // i18n_get_system_locale() returns "en_US" for US English — the only Pebble
+  // i18n_get_system_locale() returns "en_US" for US English -- the only Pebble
   // locale that uses imperial units. All other locales get metric.
   mask = health_service_metric_accessible(HealthMetricWalkedDistanceMeters, start, now);
   s_distance_m = (mask & HealthServiceAccessibilityMaskAvailable)

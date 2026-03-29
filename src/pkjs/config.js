@@ -18,13 +18,14 @@ module.exports = {
     // Design mix: ~half have active tips; ~1/3 have split lH/lM colors
     // ----------------------------------------------------------------
     var presets = [
-      // ---- DARK (8) — Radium first, then the 2015 tweet schemes ----
-      // Radium v2.2: ticks/ring=#00ff00 (GColorGreen), tips=#aaffaa (GColorMintGreen)
+      // ---- DARK (8) -- Radium first, then the 2015 tweet schemes ----
+      // Radium (classic): ticks/ring=#aaffaa (GColorMintGreen), tips=white
+      // Radium+ (v2.2 bright): ticks/ring=#00ff00 (GColorGreen), tips=#aaffaa
       { label:'Radium',  bg:'#000000',obg:'#000000',tt:'#ffffff',
-        lH:'#00ff00',lM:'#00ff00',lB:'#00ff00',lS:'#00ff00',
+        lH:'#aaffaa',lM:'#aaffaa',lB:'#aaffaa',lS:'#aaffaa',
         dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500',
-        tH:'#aaffaa',tM:'#aaffaa',
-        l1:'#00ff00',l2:'#aaffaa',l3:'#aaffaa',l4:'#00ff00' },
+        tH:'#ffffff',tM:'#ffffff',
+        l1:'#aaaaaa',l2:'#aaffaa',l3:'#aaffaa',l4:'#aaaaaa' },
       { label:'Scarlet', bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff0000',lM:'#ff0000',lB:'#ff0000',lS:'#ff0000',
         dH:'#550000',dM:'#550000',dB:'#550000',dS:'#550000',
@@ -223,11 +224,12 @@ module.exports = {
         dH:'#550000',dM:'#aa5500',dB:'#005500',dS:'#005555',
         tH:'#ffff00',tM:'#ffff00',
         l1:'#aaaaaa',l2:'#ffaa55',l3:'#aaaaaa',l4:'#aaaaaa' },
+      // Radium+: v2.2 bright green -- ticks=#00ff00, tips=#aaffaa, outer lines=#00ff00
       { label:'Radium+',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#00ff00',lM:'#00ff00',lB:'#00ff00',lS:'#00ff00',
         dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500',
         tH:'#aaffaa',tM:'#aaffaa',
-        l1:'#55aa55',l2:'#aaffaa',l3:'#aaffaa',l4:'#55aa55' },
+        l1:'#00ff00',l2:'#aaffaa',l3:'#aaffaa',l4:'#00ff00' },
     ];
 
     var palette = [
@@ -344,7 +346,6 @@ module.exports = {
       + '.field-row:last-child{border-bottom:none}'
       + '.field-row label{font-size:14px;color:#aaa;white-space:nowrap;min-width:60px}'
       + '.swatch{width:32px;height:24px;border-radius:4px;cursor:pointer;border:2px solid #333;flex-shrink:0}'
-      // Top-level expand rows: bold, uppercase, full white
       + '.expand-row{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid #222;cursor:pointer;user-select:none}'
       + '.expand-row:last-child{border-bottom:none}'
       + '.expand-row label{font-size:13px;font-weight:bold;text-transform:uppercase;letter-spacing:0.06em;color:#fff;flex:1;cursor:pointer}'
@@ -433,7 +434,6 @@ module.exports = {
       + '<h2>Presets</h2><div class="card"><div class="presets">' + presetsHtml + '</div></div>'
       + '<h2>Colors</h2><div class="card">'
 
-      // Text group
       + '<div class="expand-row" onclick="toggle(\'text\')"><label>Text</label><div class="right"><div class="swatch" id="sw-TextAll" onclick="openPicker(\'TextAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-text">+</span></div></div>'
       + '<div class="sub-rows" id="sub-text">'
       + '<div class="sub-row"><label>Time</label><div class="swatch" id="sw-TimeColor" onclick="openPicker(\'TimeColor\')"></div></div>'
@@ -446,7 +446,6 @@ module.exports = {
       + '</div>'
       + '</div>'
 
-      // Lit group
       + '<div class="expand-row" onclick="toggle(\'lit\')"><label>Lit</label><div class="right"><div class="swatch" id="sw-LitAll" onclick="openPicker(\'LitAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-lit">+</span></div></div>'
       + '<div class="sub-rows" id="sub-lit">'
       + '<div class="sub-expand-row" onclick="toggle2(\'litticks\')"><label>Time Ticks</label><div class="right"><div class="swatch" id="sw-LitTicks" onclick="openPicker(\'LitTicks\');event.stopPropagation()"></div><span class="sub-expand-btn" id="btn2-litticks">+</span></div></div>'
@@ -462,7 +461,6 @@ module.exports = {
       + '<div class="sub-sub-row"><label>Steps</label><div class="swatch" id="sw-LitStepsColor" onclick="openPicker(\'LitStepsColor\')"></div></div>'
       + '</div></div>'
 
-      // Unlit group
       + '<div class="expand-row" onclick="toggle(\'dim\')"><label>Unlit</label><div class="right"><div class="swatch" id="sw-DimAll" onclick="openPicker(\'DimAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-dim">+</span></div></div>'
       + '<div class="sub-rows" id="sub-dim">'
       + '<div class="sub-expand-row" onclick="toggle2(\'dimticks\')"><label>Time Ticks</label><div class="right"><div class="swatch" id="sw-DimTicks" onclick="openPicker(\'DimTicks\');event.stopPropagation()"></div><span class="sub-expand-btn" id="btn2-dimticks">+</span></div></div>'
@@ -476,7 +474,6 @@ module.exports = {
       + '<div class="sub-sub-row"><label>Steps</label><div class="swatch" id="sw-DimStepsColor" onclick="openPicker(\'DimStepsColor\')"></div></div>'
       + '</div></div>'
 
-      // Base group
       + '<div class="expand-row" onclick="toggle(\'base\')"><label>Base</label><div class="right"><div class="swatch" id="sw-BaseAll" onclick="openPicker(\'BaseAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-base">+</span></div></div>'
       + '<div class="sub-rows" id="sub-base">'
       + '<div class="sub-row"><label>Overlay</label><div class="swatch" id="sw-OverlayColor" onclick="openPicker(\'OverlayColor\')"></div></div>'
@@ -511,13 +508,13 @@ module.exports = {
       + '<script>'
       + platformData + presetsData + paletteData
 
-      // Default colors = Radium v2.2 preset
+      // Default colors = Radium classic preset
       + 'var colors={'
       + 'BackgroundColor:"#000000",OverlayColor:"#000000",TimeColor:"#ffffff",'
-      + 'LitHourColor:"#00ff00",LitMinuteColor:"#00ff00",LitBatteryColor:"#00ff00",LitStepsColor:"#00ff00",'
+      + 'LitHourColor:"#aaffaa",LitMinuteColor:"#aaffaa",LitBatteryColor:"#aaffaa",LitStepsColor:"#aaffaa",'
       + 'DimHourColor:"#005500",DimMinuteColor:"#005500",DimBatteryColor:"#005500",DimStepsColor:"#005500",'
-      + 'HourTipColor:"#aaffaa",MinuteTipColor:"#aaffaa",'
-      + 'Line1Color:"#00ff00",Line2Color:"#aaffaa",Line3Color:"#aaffaa",Line4Color:"#00ff00"'
+      + 'HourTipColor:"#ffffff",MinuteTipColor:"#ffffff",'
+      + 'Line1Color:"#aaaaaa",Line2Color:"#aaffaa",Line3Color:"#aaffaa",Line4Color:"#aaaaaa"'
       + '};'
 
       + 'function updateSwatches(key,hex){'
