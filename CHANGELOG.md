@@ -24,7 +24,7 @@
 
 ### Health fields
 - Distance: walked distance today in mi or km, auto-detected via locale
-- Calories: active kcal burned today, custom flame icon
+- Active calories: active kcal burned today (excludes resting metabolic rate), custom flame icon
 - Steps + distance + calories consolidated into single update per movement event
 
 ### Overlay improvements
@@ -38,6 +38,9 @@
 - Cascade: setting Hours/Minutes also sets their respective tip colors
 
 ### Bug fixes
+- Rect ring: battery fill at low charge was filling from the corner inward instead of
+  from the 6-o’clock origin outward, leaving a dark gap at the origin (affects all rect
+  platforms, color and B&W; present since v2.0)
 - Round watch: leading hour tick off-by-one in 12h mode (wrong slot formula)
 - Calories flame icon: 1px overflow on small overlay (base rect height 4→3)
 - Weather text: removed degree symbol from format string (caused silent render failure)
