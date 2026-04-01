@@ -20,18 +20,17 @@ Radium 2 is a complete rebuild of the original Radium watchface, designed for Pe
 ---
 FEATURES
 - Radial bar graph display — hours on the left, minutes on the right
+- 24h mode: each hour slot splits into two half-segments
+- Optional outer ring: step count (left half) and battery level (right half)
 - Four configurable info lines: day, date, weather, steps, distance, calories, battery %, or none
 - Live weather from Open-Meteo — no account or API key required
-- Shake to toggle overlay on/off (or set always-on / always-off)
-- 1-minute overlay mode: art mode by default, one shake shows info for 60 seconds
-- Art mode: set overlay to Always Off for a pure full-face starburst
-- 24h mode: each hour slot splits into two half-segments
-- Outer ring: step count (left half) and battery level (right half)
-- Optional outer ring: hide it and tick art extends to the screen edge
-- Two overlay sizes: Small and Large (Large default on Pebble Time 2 and Round 2)
-- 40 color presets in five rows: Dark, Dark+, Light, Color, Special
 - Full per-element color customization: 17 independent color slots
+- 40 color presets in five rows: Dark, Dark+, Light, Color, Special
 - B&W invert mode for Pebble Classic, Pebble 2, and Pebble 2 Duo
+- Shake to toggle info overlay on/off (or set always-on / always-off)
+- Art mode: set overlay to Always Off for a pure full-face starburst
+- 1-minute overlay mode: Art Mode by default, one shake shows info for 60 seconds
+- Two info overlay sizes: Small and Large (Large default on Pebble Time 2 and Round 2)
 
 PLATFORMS:
 Pebble Classic/Steel · Pebble Time/Steel · Pebble Time Round · Pebble 2 · Pebble Time 2 · Pebble 2 Duo · Pebble Round 2
