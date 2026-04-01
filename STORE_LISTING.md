@@ -8,35 +8,35 @@ Radial bar graph watchface. Hours and minutes as arcs, battery and steps on the 
 
 ## Full Description
 
-A radial bar graph watchface — time and energy flowing around your wrist. Hours and minutes as arcs, with battery and steps on the outer ring.
+A radial bar graph watchface.
+Time and energy flowing around your wrist — hours and minutes as arcs, with battery and steps on the outer ring.
 
-The left half of the face fills with hour blocks, one per hour, sweeping around clockwise from the bottom. The right half fills with minute ticks: 60 individual marks in groups of five, lighting up as each minute passes. The outer ring tracks step count toward your daily goal on the left side and battery level on the right.
+The left half of the face fills with hour blocks, one per hour, sweeping clockwise from the bottom. The right half fills with minute ticks: 60 individual marks in groups of five, lighting up as each minute passes. The outer ring tracks step count toward your daily goal on the left side and battery level on the right.
 
-In the center, an optional overlay shows the time plus up to four configurable info lines. Shake to dismiss it and see the full radial display — a pure starburst of glowing geometry. Shake again to bring it back. (Or set the overlay to always-on, always-off, or 1-minute auto-hide in settings.)
+In the center, an optional overlay shows the time and up to four configurable info lines — mix and match day, date, weather, steps, distance, active calories, and battery % however you like. Shake to dismiss it and see the full radial display: a pure starburst of glowing geometry. Shake again to bring it back. (Or set the overlay to always-on or always-off in settings.)
 
 Radium 2 is a complete rebuild of the original Radium watchface, designed for Pebble Time Round in 2015 and first published in 2016. Rebuilt for all Pebble platforms with 40 color presets and full per-element color customization.
 
 ---
-
-**FEATURES**
+FEATURES
 - Radial bar graph display — hours on the left, minutes on the right
-- Shake to toggle overlay on/off (or set always-on / always-off / 1-min auto-hide)
+- Four configurable info lines: day, date, weather, steps, distance, calories, battery %, or none
+- Live weather from Open-Meteo — no account or API key required
+- Shake to toggle overlay on/off (or set always-on / always-off)
+- 1-minute overlay mode: art mode by default, one shake shows info for 60 seconds
 - Art mode: set overlay to Always Off for a pure full-face starburst
 - 24h mode: each hour slot splits into two half-segments
-- Outer ring: step count (left half) and battery (right half)
+- Outer ring: step count (left half) and battery level (right half)
 - Optional outer ring: hide it and tick art extends to the screen edge
-- 4 configurable info lines: day, date, steps, distance, calories, weather, battery
-- Live weather: current temperature (°F or °C) with 6 custom weather icons
+- Two overlay sizes: Small and Large (Large default on Pebble Time 2 and Round 2)
 - 40 color presets in five rows: Dark, Dark+, Light, Color, Special
 - Full per-element color customization: 17 independent color slots
-- Leading-tick highlights: current hour and minute tick independently colorable
 - B&W invert mode for Pebble Classic, Pebble 2, and Pebble 2 Duo
 
-**PLATFORMS:**
+PLATFORMS:
 Pebble Classic/Steel · Pebble Time/Steel · Pebble Time Round · Pebble 2 · Pebble Time 2 · Pebble 2 Duo · Pebble Round 2
 
 ---
-
 2015: Original Radium design by Sterling Ely
 2016: Prototype implementation by MathewReiss; completed by MicroByte
 2026: Radium 2 rebuilt by Sterling Ely & Claude (Anthropic)
@@ -48,15 +48,12 @@ Feedback is appreciated: please hit me up at @sterlingely on Twitter/X with any 
 ## Release Notes
 
 ### v2.2
-- 40 redesigned color presets: 5 new themes (Violet, Jungle, Lavender, Poison, Prism), 7 tweaked for better color theory
-- Principled dim color convention: unlit ticks use a dark shade of the same hue family, not neutral gray
-- 4 info lines now independently configurable: each can show day, date, steps, distance, calories, weather, or battery
-- Live weather from Open-Meteo (no API key needed): temperature in °F or °C with 6 custom weather icons
-- 1-min overlay mode: shake to show, auto-hides after 60 seconds
-- Leading-tick highlights: current hour and minute ticks each independently colorable (17 color slots total)
-- Two overlay sizes: Small (default) and Large (default on Pebble Time 2 and Round 2)
-- Bug fix: leading hour tick off-by-one on round watches in 12-hour mode
-- Bug fix: calories flame icon 1px overflow on small overlay
+- The text above & below the time are now 4 configurable info lines: Each can show day, date, weather, steps, distance, active calories, battery %, or nothing!
+- Introducing 1-minute overlay mode: The watchface defaults to "art mode" while at rest, and a shake brings up the detailed info display for 60 seconds!
+- Leading-tick highlights: The current hour and minute ticks are independently colorable, bringing the total customizable color slots to 17!
+- New large overlay sizes for Pebble Time 2 & Round 2: Big info display or more room for the radial starburst? The choice is yours!
+- 40 redesigned color presets: 40% prettier!
+- ...all that and a couple of bug fixes!
 
 ### v2.1
 - 40 color presets across five rows (Dark, Dark+, Light, Color, Special) — up from 24
