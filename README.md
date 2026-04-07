@@ -16,10 +16,13 @@ The face works on two levels. With the overlay on, it reads like a normal watchf
 
 - **Radial time display** — right half: 60 minute ticks in groups of 5. Left half: 12 hour blocks (or 24 in 24h mode, each block split in two)
 - **Overlay modes** — Always On, Shake, 1 min auto-hide, or Always Off (pure art mode)
-- **4 configurable info lines** — choose from: Day, Date, Day+Date, Steps, Distance, Calories, Temp °F, Temp °C, Battery, or None
+- **4 configurable info lines** — choose from: Day, Date, Day+Date, Steps, Distance, Calories, Temp °F, Temp °C, Battery, Bluetooth status, Heart rate, or None
 - **Live weather** — current conditions fetched from Open-Meteo via phone; displayed with a small custom icon
 - **Outer ring** — battery level on the right, step count on the left, both filling from 6 o'clock toward 12; hideable
 - **Leading tick highlights** — the current hour and minute ticks glow brighter, independently colorable
+- **Charging indicator** — battery icon swaps to a lightning bolt when the watch is on the charger
+- **Bluetooth alert** — Bluetooth rune appears on a configured info line when phone connection is lost, with a double vibration alert
+- **Heart rate** — live BPM display on supported hardware (Pebble Time, Time 2, Pebble 2)
 - **24h support** — each hour slot splits into two segments with a gap between them
 - **17 independently configurable color slots** across time, ticks, tips, ring, info lines, and base
 - **40 presets** in five rows (Dark, Dark+, Light, Color, Special) — one tap to apply
@@ -76,7 +79,9 @@ Four independently configurable lines surround the time display (two above, two 
 | Calories | flame icon + active kcal |
 | Temp °F | weather icon + temperature |
 | Temp °C | weather icon + temperature |
-| Battery | battery icon + charge % |
+| Battery | battery icon + charge % (bolt when charging) |
+| Bluetooth | BT rune — visible when disconnected, blank when connected |
+| Heart rate | heart icon + BPM ("72bpm" or "--") |
 
 ---
 
@@ -85,11 +90,11 @@ Four independently configurable lines surround the time display (two above, two 
 | Platform | Watch | Screen | Notes |
 |---|---|---|---|
 | Aplite | Pebble Classic, Steel | 144×168 B&W | High-contrast, invert option, no health |
-| Basalt | Pebble Time | 144×168 color | |
+| Basalt | Pebble Time | 144×168 color | Heart rate supported |
 | Chalk | Pebble Time Round | 180×180 color | Round rendering |
-| Diorite | Pebble 2 SE | 144×168 B&W | High-contrast, invert option |
-| Emery | Pebble Time 2 | 200×228 color | Large overlay default |
-| Flint | Pebble 2 | 144×168 B&W | High-contrast, invert option, no health |
+| Diorite | Pebble 2 SE | 144×168 B&W | High-contrast, invert option, heart rate supported |
+| Emery | Pebble Time 2 | 200×228 color | Large overlay default, heart rate supported |
+| Flint | Pebble 2 | 144×168 B&W | High-contrast, invert option, heart rate supported |
 | Gabbro | Pebble Round 2 | 260×260 color | Round rendering, large overlay default |
 
 ---
