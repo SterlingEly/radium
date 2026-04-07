@@ -349,26 +349,30 @@ module.exports = {
     // Calories label clarifies active-only (excludes resting metabolic rate);
     // the Pebble Health app shows total (active + resting), which is why the numbers differ.
     var fieldOptionsInner = [
-      { value: 0, label: 'None' },
-      { value: 1, label: 'Day' },
-      { value: 2, label: 'Date' },
-      { value: 3, label: 'Day + Date' },
-      { value: 4, label: 'Steps' },
-      { value: 5, label: 'Temp (F)' },
-      { value: 6, label: 'Temp (C)' },
-      { value: 7, label: 'Battery' },
-      { value: 8, label: 'Distance' },
-      { value: 9, label: 'Active calories' },
+      { value: 0,  label: 'None' },
+      { value: 1,  label: 'Day' },
+      { value: 2,  label: 'Date' },
+      { value: 3,  label: 'Day + Date' },
+      { value: 4,  label: 'Steps' },
+      { value: 5,  label: 'Temp (F)' },
+      { value: 6,  label: 'Temp (C)' },
+      { value: 7,  label: 'Battery' },
+      { value: 8,  label: 'Distance' },
+      { value: 9,  label: 'Active calories' },
+      { value: 10, label: 'Bluetooth' },
+      { value: 11, label: 'Heart rate' },
     ];
     var fieldOptionsOuter = [
-      { value: 0, label: 'None' },
-      { value: 2, label: 'Date' },
-      { value: 4, label: 'Steps' },
-      { value: 5, label: 'Temp (F)' },
-      { value: 6, label: 'Temp (C)' },
-      { value: 7, label: 'Battery' },
-      { value: 8, label: 'Distance' },
-      { value: 9, label: 'Active calories' },
+      { value: 0,  label: 'None' },
+      { value: 2,  label: 'Date' },
+      { value: 4,  label: 'Steps' },
+      { value: 5,  label: 'Temp (F)' },
+      { value: 6,  label: 'Temp (C)' },
+      { value: 7,  label: 'Battery' },
+      { value: 8,  label: 'Distance' },
+      { value: 9,  label: 'Active calories' },
+      { value: 10, label: 'Bluetooth' },
+      { value: 11, label: 'Heart rate' },
     ];
 
     function makeSelect(id, defaultVal, options) {
