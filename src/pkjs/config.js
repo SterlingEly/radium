@@ -21,232 +21,167 @@ module.exports = {
     var presets = [
 
       // ---- DARK (8) -- black bg, monochromatic, clean & readable ----
-      // Formula: lit=bright, tip=mid, dim=dark (3 swatches from same hue column)
-
-      // Radium: the anchor. GColorGreen lit, GColorMintGreen tips.
       { label:'Radium',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#00ff00',lM:'#00ff00',lB:'#00ff00',lS:'#00ff00',
         dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500',
         tH:'#aaffaa',tM:'#aaffaa',
         l1:'#00ff00',l2:'#aaffaa',l3:'#aaffaa',l4:'#00ff00' },
-
-      // Scarlet: pure red mono
       { label:'Scarlet', bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff0000',lM:'#ff0000',lB:'#ff0000',lS:'#ff0000',
         dH:'#550000',dM:'#550000',dB:'#550000',dS:'#550000',
         tH:'#ffaaaa',tM:'#ffaaaa',
         l1:'#aaaaaa',l2:'#ff5555',l3:'#ff5555',l4:'#aaaaaa' },
-
-      // Ember: orange mono -- dim uses warm BulgarianRose, not neutral gray
       { label:'Ember',   bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff5500',lM:'#ff5500',lB:'#ff5500',lS:'#ff5500',
         dH:'#550000',dM:'#550000',dB:'#550000',dS:'#550000',
         tH:'#ffaa55',tM:'#ffaa55',
         l1:'#aaaaaa',l2:'#ffaa55',l3:'#ffaa55',l4:'#aaaaaa' },
-
-      // Cobalt: blue mono -- dim uses OxfordBlue, not neutral gray
       { label:'Cobalt',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#0055ff',lM:'#0055ff',lB:'#0055ff',lS:'#0055ff',
         dH:'#000055',dM:'#000055',dB:'#000055',dS:'#000055',
         tH:'#aaaaff',tM:'#aaaaff',
         l1:'#aaaaaa',l2:'#aaaaff',l3:'#aaaaff',l4:'#aaaaaa' },
-
-      // Volt: yellow-green/yellow split -- electric energy, tip = PastelYellow for contrast
       { label:'Volt',    bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#aaff00',lM:'#ffff00',lB:'#aaff00',lS:'#ffff00',
         dH:'#555500',dM:'#555500',dB:'#555500',dS:'#555500',
         tH:'#ffffaa',tM:'#ffffaa',
         l1:'#aaaa55',l2:'#ffffaa',l3:'#ffffaa',l4:'#aaaa55' },
-
-      // Slate: achromatic split -- white hours, LightGray minutes; only theme using gray dim
       { label:'Slate',   bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ffffff',lM:'#aaaaaa',lB:'#aaaaaa',lS:'#aaaaaa',
         dH:'#555555',dM:'#555555',dB:'#555555',dS:'#555555',
         tH:'#ffffff',tM:'#ffffff',
         l1:'#aaaaaa',l2:'#aaaaaa',l3:'#aaaaaa',l4:'#aaaaaa' },
-
-      // Violet: VividViolet mono -- fills the indigo/violet gap (replaces Crimson ~= Scarlet)
       { label:'Violet',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#aa00ff',lM:'#aa00ff',lB:'#aa00ff',lS:'#aa00ff',
         dH:'#550055',dM:'#550055',dB:'#550055',dS:'#550055',
         tH:'#ffaaff',tM:'#ffaaff',
         l1:'#aa55aa',l2:'#ffaaff',l3:'#ffaaff',l4:'#aa55aa' },
-
-      // Dusk: pure Magenta (#ff00ff) -- sharpened from #ff55ff for clean separation
       { label:'Dusk',    bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff00ff',lM:'#ff00ff',lB:'#ff00ff',lS:'#ff00ff',
         dH:'#550055',dM:'#550055',dB:'#550055',dS:'#550055',
         tH:'#ffaaff',tM:'#ffaaff',
         l1:'#aa55aa',l2:'#ffaaff',l3:'#ffaaff',l4:'#aa55aa' },
 
-      // ---- DARK+ (8) -- black bg, split colors & gradients, more personality ----
-
-      // Ocean: VividCerulean hours, Cyan minutes -- adjacent analogous, deep water
+      // ---- DARK+ (8) -- black bg, split colors & gradients ----
       { label:'Ocean',   bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#00aaff',lM:'#00ffff',lB:'#00aaff',lS:'#00aaff',
         dH:'#0055aa',dM:'#005555',dB:'#0055aa',dS:'#0055aa',
         tH:'#aaffff',tM:'#ffffff',
         l1:'#0055aa',l2:'#aaffff',l3:'#aaffff',l4:'#0055aa' },
-
-      // Aurora: Malachite/Cyan/Cerulean/Mint quad -- northern lights gradient
       { label:'Aurora',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#00ff55',lM:'#00ffff',lB:'#00aaff',lS:'#aaffaa',
         dH:'#005500',dM:'#005555',dB:'#005555',dS:'#005500',
         tH:'#aaffaa',tM:'#aaffff',
         l1:'#aaaaaa',l2:'#aaffff',l3:'#aaffaa',l4:'#aaaaaa' },
-
-      // Solar: full fire gradient Orange->ChromeYellow->Yellow->SpringBud across all 4 channels
       { label:'Solar',   bg:'#000000',obg:'#000000',tt:'#ffaa55',
         lH:'#ff5500',lM:'#ffaa00',lB:'#ffff00',lS:'#aaff00',
         dH:'#550000',dM:'#555500',dB:'#555500',dS:'#005500',
         tH:'#ffff00',tM:'#ffff00',
         l1:'#aa5500',l2:'#ffaa00',l3:'#ffaa00',l4:'#aa5500' },
-
-      // Venom: SpringBud/VividViolet complement split -- max hue distance
       { label:'Venom',   bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#aaff00',lM:'#aa00ff',lB:'#55ff00',lS:'#5500aa',
         dH:'#005500',dM:'#550055',dB:'#005500',dS:'#550055',
         tH:'#aaff00',tM:'#aa00ff',
         l1:'#aaaaaa',l2:'#aaff55',l3:'#aa55ff',l4:'#aaaaaa' },
-
-      // Reactor: Cyan/Red complement -- maximum contrast across the color wheel
       { label:'Reactor', bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#00ffff',lM:'#ff0000',lB:'#00aaff',lS:'#ff5500',
         dH:'#005555',dM:'#550000',dB:'#005555',dS:'#550000',
         tH:'#aaffff',tM:'#ffaaaa',
         l1:'#aaaaaa',l2:'#aaffff',l3:'#ffaaaa',l4:'#aaaaaa' },
-
-      // Neon: Green/Magenta split -- classic neon sign duality
       { label:'Neon',    bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#00ff00',lM:'#ff00ff',lB:'#00ffff',lS:'#ff55ff',
         dH:'#005500',dM:'#550055',dB:'#005555',dS:'#550055',
         tH:'#00ff00',tM:'#ff00ff',
         l1:'#aaaaaa',l2:'#aaffaa',l3:'#ffaaff',l4:'#aaaaaa' },
-
-      // Blossom: MintGreen/BrilliantRose split -- organic spring garden
       { label:'Blossom', bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#aaffaa',lM:'#ff55aa',lB:'#55ffaa',lS:'#ff0055',
         dH:'#005500',dM:'#550055',dB:'#005500',dS:'#aa0055',
         tH:'#ffffff',tM:'#ffffff',
         l1:'#aaaaaa',l2:'#aaffaa',l3:'#ff55aa',l4:'#aaaaaa' },
-
-      // Jungle: BrightGreen/Malachite analogous -- fills yellow-green gap (replaces Hearth ~= Solar)
       { label:'Jungle',  bg:'#000000',obg:'#000000',tt:'#aaffaa',
         lH:'#55ff00',lM:'#00ff55',lB:'#aaff00',lS:'#00ffaa',
         dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005555',
         tH:'#aaffaa',tM:'#aaffaa',
         l1:'#55aa55',l2:'#aaffaa',l3:'#aaffaa',l4:'#55aa55' },
 
-      // ---- LIGHT (8) -- light/white backgrounds, dark ticks ----
-
-      // Paper: black on white -- the cleanest, most readable
+      // ---- LIGHT (8) -- light/white backgrounds ----
       { label:'Paper',    bg:'#ffffff',obg:'#ffffff',tt:'#000000',
         lH:'#000000',lM:'#000000',lB:'#000000',lS:'#000000',
         dH:'#aaaaaa',dM:'#aaaaaa',dB:'#aaaaaa',dS:'#aaaaaa',
         tH:'#555555',tM:'#555555',
         l1:'#555555',l2:'#555555',l3:'#555555',l4:'#555555' },
-
-      // Jade: JaegerGreen on white -- gem quality, deep not neon
       { label:'Jade',     bg:'#ffffff',obg:'#ffffff',tt:'#000000',
         lH:'#00aa55',lM:'#00aa55',lB:'#00aa55',lS:'#00aa55',
         dH:'#aaffaa',dM:'#aaffaa',dB:'#aaffaa',dS:'#aaffaa',
         tH:'#005500',tM:'#005500',
         l1:'#aaaaaa',l2:'#00aa55',l3:'#00aa55',l4:'#aaaaaa' },
-
-      // Sapphire: CobaltBlue on white -- ink on paper
       { label:'Sapphire', bg:'#ffffff',obg:'#ffffff',tt:'#000000',
         lH:'#0055aa',lM:'#0055aa',lB:'#0055aa',lS:'#0055aa',
         dH:'#aaaaff',dM:'#aaaaff',dB:'#aaaaff',dS:'#aaaaff',
         tH:'#000055',tM:'#000055',
         l1:'#aaaaaa',l2:'#0055aa',l3:'#0055aa',l4:'#aaaaaa' },
-
-      // Ruby: DarkCandyAppleRed on white -- jewel-like
       { label:'Ruby',     bg:'#ffffff',obg:'#ffffff',tt:'#000000',
         lH:'#aa0000',lM:'#aa0000',lB:'#aa0000',lS:'#aa0000',
         dH:'#ffaaaa',dM:'#ffaaaa',dB:'#ffaaaa',dS:'#ffaaaa',
         tH:'#550000',tM:'#550000',
         l1:'#aaaaaa',l2:'#aa0000',l3:'#aa0000',l4:'#aaaaaa' },
-
-      // Mint: DarkGreen on white, MintGreen dim -- inverted Radium, crisp
       { label:'Mint',     bg:'#ffffff',obg:'#ffffff',tt:'#000000',
         lH:'#005500',lM:'#005500',lB:'#005500',lS:'#005500',
         dH:'#aaffaa',dM:'#aaffaa',dB:'#aaffaa',dS:'#aaffaa',
         tH:'#000000',tM:'#000000',
         l1:'#000000',l2:'#005500',l3:'#005500',l4:'#000000' },
-
-      // Rose: BulgarianRose on white, Melon dim -- elegant dark rose
       { label:'Rose',     bg:'#ffffff',obg:'#ffffff',tt:'#550000',
         lH:'#550000',lM:'#550000',lB:'#550000',lS:'#550000',
         dH:'#ffaaaa',dM:'#ffaaaa',dB:'#ffaaaa',dS:'#ffaaaa',
         tH:'#000000',tM:'#000000',
         l1:'#000000',l2:'#550000',l3:'#550000',l4:'#000000' },
-
-      // Lavender: VividViolet on white -- fills purple gap in light row (replaces Navy)
       { label:'Lavender', bg:'#ffffff',obg:'#ffffff',tt:'#000000',
         lH:'#aa00ff',lM:'#aa00ff',lB:'#aa00ff',lS:'#aa00ff',
         dH:'#ffaaff',dM:'#ffaaff',dB:'#ffaaff',dS:'#ffaaff',
         tH:'#550055',tM:'#550055',
         l1:'#aa55aa',l2:'#aa00ff',l3:'#aa00ff',l4:'#aa55aa' },
-
-      // Sepia: BulgarianRose on PastelYellow -- warmth of aged paper
       { label:'Sepia',    bg:'#ffffaa',obg:'#ffffaa',tt:'#000000',
         lH:'#550000',lM:'#550000',lB:'#550000',lS:'#550000',
         dH:'#ffaa55',dM:'#ffaa55',dB:'#ffaa55',dS:'#ffaa55',
         tH:'#000000',tM:'#000000',
         l1:'#aa5500',l2:'#aa5500',l3:'#aa5500',l4:'#aa5500' },
 
-      // ---- COLOR (8) -- saturated backgrounds, complement lit ----
-
-      // Teal: white on TiffanyBlue, Celeste tips
+      // ---- COLOR (8) -- saturated backgrounds ----
       { label:'Teal',        bg:'#00aaaa',obg:'#00aaaa',tt:'#ffffff',
         lH:'#ffffff',lM:'#ffffff',lB:'#ffffff',lS:'#ffffff',
         dH:'#005555',dM:'#005555',dB:'#005555',dS:'#005555',
         tH:'#aaffff',tM:'#aaffff',
         l1:'#aaffff',l2:'#ffffff',l3:'#ffffff',l4:'#aaffff' },
-
-      // Flame: white on Orange, Yellow tips -- lit match on fire
       { label:'Flame',       bg:'#ff5500',obg:'#ff5500',tt:'#ffffff',
         lH:'#ffffff',lM:'#ffffff',lB:'#ffffff',lS:'#ffffff',
         dH:'#aa5500',dM:'#aa5500',dB:'#aa5500',dS:'#aa5500',
         tH:'#ffff00',tM:'#ffff00',
         l1:'#ffff00',l2:'#ffffff',l3:'#ffffff',l4:'#ffff00' },
-
-      // Midnight: Cyan hours, BabyBlue minutes on DukeBlue -- deep night sky
       { label:'Midnight',    bg:'#0000aa',obg:'#0000aa',tt:'#aaaaff',
         lH:'#00ffff',lM:'#aaaaff',lB:'#00aaff',lS:'#aaaaff',
         dH:'#0055aa',dM:'#0055aa',dB:'#0055aa',dS:'#0055aa',
         tH:'#ffffff',tM:'#ffffff',
         l1:'#00ffff',l2:'#aaaaff',l3:'#aaaaff',l4:'#00ffff' },
-
-      // Forest: BrightGreen on DarkGreen -- maximum natural green contrast
       { label:'Forest',      bg:'#005500',obg:'#005500',tt:'#ffffff',
         lH:'#55ff00',lM:'#55ff00',lB:'#55ff00',lS:'#55ff00',
         dH:'#55aa00',dM:'#55aa00',dB:'#55aa00',dS:'#55aa00',
         tH:'#ffffff',tM:'#ffffff',
         l1:'#aaaaaa',l2:'#55ff00',l3:'#55ff00',l4:'#aaaaaa' },
-
-      // Plum: ShockingPink on ImperialPurple -- saturated jewel tone
       { label:'Plum',        bg:'#550055',obg:'#550055',tt:'#ffffff',
         lH:'#ff55ff',lM:'#ff55ff',lB:'#ff55ff',lS:'#ff55ff',
         dH:'#aa00aa',dM:'#aa00aa',dB:'#aa00aa',dS:'#aa00aa',
         tH:'#ffffff',tM:'#ffffff',
         l1:'#aa55aa',l2:'#ffaaff',l3:'#ffaaff',l4:'#aa55aa' },
-
-      // Poison: SpringBud/Malachite on ImperialPurple -- max complement distance (replaces Cinnabar ~= Flame)
       { label:'Poison',      bg:'#550055',obg:'#550055',tt:'#ffffff',
         lH:'#aaff00',lM:'#00ff55',lB:'#aaff00',lS:'#00ff55',
         dH:'#005500',dM:'#005500',dB:'#005500',dS:'#005500',
         tH:'#aaffaa',tM:'#aaffaa',
         l1:'#55aa55',l2:'#aaffaa',l3:'#aaffaa',l4:'#55aa55' },
-
-      // Ultraviolet: Indigo->Violet->Magenta spectrum on purple -- immersive UV
       { label:'Ultraviolet', bg:'#550055',obg:'#550055',tt:'#ffffff',
         lH:'#aa00ff',lM:'#ff00ff',lB:'#ff55ff',lS:'#aa00ff',
         dH:'#5500aa',dM:'#550055',dB:'#5500aa',dS:'#550055',
         tH:'#ffffff',tM:'#ffffff',
         l1:'#aa55ff',l2:'#ffaaff',l3:'#ffaaff',l4:'#aa55ff' },
-
-      // Ash: white on DarkGray -- achromatic warmth (only theme with gray bg)
       { label:'Ash',         bg:'#555555',obg:'#555555',tt:'#ffffff',
         lH:'#ffffff',lM:'#ffffff',lB:'#ffffff',lS:'#ffffff',
         dH:'#aaaaaa',dM:'#aaaaaa',dB:'#aaaaaa',dS:'#aaaaaa',
@@ -254,58 +189,41 @@ module.exports = {
         l1:'#aaaaaa',l2:'#ffffff',l3:'#ffffff',l4:'#aaaaaa' },
 
       // ---- SPECIAL (8) -- multi-channel showpieces ----
-
-      // Boreal: VividCerulean/ElectricBlue split, DukeBlue overlay -- northern lights
       { label:'Boreal',   bg:'#000000',obg:'#0000aa',tt:'#aaaaff',
         lH:'#00aaff',lM:'#55ffff',lB:'#00ffff',lS:'#55aaff',
         dH:'#0000aa',dM:'#005555',dB:'#005555',dS:'#0000aa',
         tH:'#ffffff',tM:'#ffffff',
         l1:'#aaaaff',l2:'#55ffff',l3:'#55ffff',l4:'#aaaaff' },
-
-      // Cosmos: VividViolet->Magenta->Rose->Folly on deep blue -- nebula in space
       { label:'Cosmos',   bg:'#0000aa',obg:'#0000aa',tt:'#aaaaff',
         lH:'#aa00ff',lM:'#ff00ff',lB:'#ff55aa',lS:'#ff0055',
         dH:'#550055',dM:'#550055',dB:'#550055',dS:'#550000',
         tH:'#ffffff',tM:'#ffffff',
         l1:'#aa55ff',l2:'#ff55ff',l3:'#ff55ff',l4:'#aa55ff' },
-
-      // Prism: Red hours / Cyan minutes / SpringBud battery / VividViolet steps
-      //        Full spectrum quad split -- light through a prism (replaces Horizon ~= Boreal)
       { label:'Prism',    bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff0000',lM:'#00ffff',lB:'#aaff00',lS:'#aa00ff',
         dH:'#550000',dM:'#005555',dB:'#005500',dS:'#550055',
         tH:'#ffaaaa',tM:'#aaffff',
         l1:'#aaaaaa',l2:'#ffaaaa',l3:'#aaffff',l4:'#aaaaaa' },
-
-      // Inferno: Red->Orange->ChromeYellow->SpringBud ascending heat across all 4 channels
       { label:'Inferno',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff0000',lM:'#ff5500',lB:'#ffaa00',lS:'#aaff00',
         dH:'#550000',dM:'#550000',dB:'#555500',dS:'#005500',
         tH:'#ffff00',tM:'#ffff00',
         l1:'#aaaaaa',l2:'#ffaa00',l3:'#ffaa00',l4:'#aaaaaa' },
-
-      // Triadic: Red/BlueMoon/Green -- classic 120 degree triadic
       { label:'Triadic',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff0000',lM:'#0055ff',lB:'#00ff00',lS:'#aa00ff',
         dH:'#550000',dM:'#0000aa',dB:'#005500',dS:'#550055',
         tH:'#ffaa55',tM:'#aaaaff',
         l1:'#aaaaaa',l2:'#ffaa55',l3:'#aaaaff',l4:'#aaaaaa' },
-
-      // GoldEye: Orange/VividCerulean split, DarkGreen overlay -- HUD aesthetic
       { label:'GoldEye',  bg:'#000000',obg:'#005500',tt:'#ffffff',
         lH:'#ff5500',lM:'#00aaff',lB:'#aaff00',lS:'#aaff00',
         dH:'#550000',dM:'#0000aa',dB:'#005500',dS:'#005500',
         tH:'#ffff00',tM:'#aaffff',
         l1:'#aaff00',l2:'#aaff00',l3:'#aaff00',l4:'#aaff00' },
-
-      // Rainbow: Red hours / ChromeYellow minutes / Green battery / Cyan steps -- ROYGBV
       { label:'Rainbow',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#ff0000',lM:'#ffaa00',lB:'#00ff00',lS:'#00ffff',
         dH:'#550000',dM:'#aa5500',dB:'#005500',dS:'#005555',
         tH:'#ffff00',tM:'#ffff00',
         l1:'#aaaaaa',l2:'#ffaa55',l3:'#aaaaaa',l4:'#aaaaaa' },
-
-      // Radium+: Green hours/battery + Cyan minutes/steps, white tips, DukeBlue dim minutes
       { label:'Radium+',  bg:'#000000',obg:'#000000',tt:'#ffffff',
         lH:'#00ff00',lM:'#00ffff',lB:'#00ff00',lS:'#00ffff',
         dH:'#005500',dM:'#0000aa',dB:'#005500',dS:'#0000aa',
@@ -344,10 +262,8 @@ module.exports = {
     };
 
     // Field options for the 4 info line dropdowns.
-    // Inner lines (2 & 3) get the full list including Day and Day+Date.
-    // Outer lines (1 & 4) get a compact list (no Day-only or Day+Date -- too wide).
-    // Calories label clarifies active-only (excludes resting metabolic rate);
-    // the Pebble Health app shows total (active + resting), which is why the numbers differ.
+    // Inner lines (2 & 3): full list including day-only and day+date.
+    // Outer lines (1 & 4): compact list (day/day+date too wide for outer slots).
     var fieldOptionsInner = [
       { value: 0,  label: 'None' },
       { value: 1,  label: 'Day' },
@@ -361,6 +277,9 @@ module.exports = {
       { value: 9,  label: 'Active Calories' },
       { value: 10, label: 'Bluetooth' },
       { value: 11, label: 'Heart rate' },
+      { value: 12, label: 'Sunrise' },
+      { value: 13, label: 'Sunset' },
+      { value: 14, label: 'Daylight' },
     ];
     var fieldOptionsOuter = [
       { value: 0,  label: 'None' },
@@ -373,6 +292,9 @@ module.exports = {
       { value: 9,  label: 'Active Calories' },
       { value: 10, label: 'Bluetooth' },
       { value: 11, label: 'Heart rate' },
+      { value: 12, label: 'Sunrise' },
+      { value: 13, label: 'Sunset' },
+      { value: 14, label: 'Daylight' },
     ];
 
     function makeSelect(id, defaultVal, options) {
@@ -384,7 +306,7 @@ module.exports = {
 
     // Large overlay on emery and chalk (chalk = gabbro in CloudPebble simulator)
     var isLargePlatform = (platform === 'emery' || platform === 'chalk');
-    var isAplite = (platform === 'aplite'); // aplite has no health service
+    var isAplite = (platform === 'aplite');
     var overlayLargeRow = isLargePlatform
       ? '<div class="row"><label>Large overlay</label>' +
         '<label class="toggle"><input type="checkbox" id="OverlaySize"><span class="knob"></span></label></div>'
@@ -546,8 +468,8 @@ module.exports = {
       + '</div>'
       + '<div class="sub-expand-row" onclick="toggle2(\'litring\')"><label>Outer Ring</label><div class="right"><div class="swatch" id="sw-LitRing" onclick="openPicker(\'LitRing\');event.stopPropagation()"></div><span class="sub-expand-btn" id="btn2-litring">+</span></div></div>'
       + '<div class="sub-sub-rows" id="sub2-litring">'
-      + '<div class="sub-sub-row"><label>Battery</label><div class="swatch" id="sw-LitBatteryColor" onclick="openPicker(\'LitBatteryColor\')"></div></div>'
-      + '<div class="sub-sub-row"><label>Steps</label><div class="swatch" id="sw-LitStepsColor" onclick="openPicker(\'LitStepsColor\')"></div></div>'
+      + '<div class="sub-sub-row"><label>Battery / Day</label><div class="swatch" id="sw-LitBatteryColor" onclick="openPicker(\'LitBatteryColor\')"></div></div>'
+      + '<div class="sub-sub-row"><label>Steps / Night</label><div class="swatch" id="sw-LitStepsColor" onclick="openPicker(\'LitStepsColor\')"></div></div>'
       + '</div></div>'
 
       + '<div class="expand-row" onclick="toggle(\'dim\')"><label>Unlit</label><div class="right"><div class="swatch" id="sw-DimAll" onclick="openPicker(\'DimAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-dim">+</span></div></div>'
@@ -559,8 +481,8 @@ module.exports = {
       + '</div>'
       + '<div class="sub-expand-row" onclick="toggle2(\'dimring\')"><label>Outer Ring</label><div class="right"><div class="swatch" id="sw-DimRing" onclick="openPicker(\'DimRing\');event.stopPropagation()"></div><span class="sub-expand-btn" id="btn2-dimring">+</span></div></div>'
       + '<div class="sub-sub-rows" id="sub2-dimring">'
-      + '<div class="sub-sub-row"><label>Battery</label><div class="swatch" id="sw-DimBatteryColor" onclick="openPicker(\'DimBatteryColor\')"></div></div>'
-      + '<div class="sub-sub-row"><label>Steps</label><div class="swatch" id="sw-DimStepsColor" onclick="openPicker(\'DimStepsColor\')"></div></div>'
+      + '<div class="sub-sub-row"><label>Battery / Day</label><div class="swatch" id="sw-DimBatteryColor" onclick="openPicker(\'DimBatteryColor\')"></div></div>'
+      + '<div class="sub-sub-row"><label>Steps / Night</label><div class="swatch" id="sw-DimStepsColor" onclick="openPicker(\'DimStepsColor\')"></div></div>'
       + '</div></div>'
 
       + '<div class="expand-row" onclick="toggle(\'base\')"><label>Base</label><div class="right"><div class="swatch" id="sw-BaseAll" onclick="openPicker(\'BaseAll\');event.stopPropagation()"></div><span class="expand-btn" id="btn-base">+</span></div></div>'
@@ -574,9 +496,14 @@ module.exports = {
       + '</div></div>'
 
       + '<h2>Outer Ring</h2><div class="card">'
-      + '<div class="row"><label>Show battery &amp; steps ring</label>'
+      + '<div class="row"><label>Show outer ring</label>'
       + '<label class="toggle"><input type="checkbox" id="ShowRing"' + (isAplite ? '' : ' checked') + '><span class="knob"></span></label></div>'
       + '<span class="note">When hidden, tick art extends to screen edge</span>'
+      // Ring mode: Steps & Battery vs Sunrise & Sunset
+      + '<div class="radio-group" style="padding:10px 14px 14px">'
+      + '<input type="radio" name="ringmode" id="rm0" value="0" checked><label for="rm0">Steps &amp; Battery</label>'
+      + '<input type="radio" name="ringmode" id="rm1" value="1"><label for="rm1">Sunrise &amp; Sunset</label>'
+      + '</div>'
       + '</div>'
 
       + (isAplite ? '' :
@@ -597,7 +524,6 @@ module.exports = {
       + '<script>'
       + platformData + presetsData + paletteData
 
-      // Default colors = Radium preset (GColorGreen lit, GColorMintGreen tips)
       + 'var colors={'
       + 'BackgroundColor:"#000000",OverlayColor:"#000000",TimeColor:"#ffffff",'
       + 'LitHourColor:"#00ff00",LitMinuteColor:"#00ff00",LitBatteryColor:"#00ff00",LitStepsColor:"#00ff00",'
@@ -658,6 +584,7 @@ module.exports = {
       + 'try{if(!CURRENT)return;'
       + 'Object.keys(CURRENT).forEach(function(k){'
       + 'if(k==="OverlayMode"){var el=document.getElementById("ov"+CURRENT[k]);if(el)el.checked=true;}'
+      + 'else if(k==="RingMode"){var el=document.getElementById("rm"+CURRENT[k]);if(el)el.checked=true;}'
       + 'else if(k==="OverlaySize"){var el=document.getElementById("OverlaySize");if(el)el.checked=(CURRENT[k]===1);}'
       + 'else if(k==="InvertBW"){document.getElementById("InvertBW").checked=!!CURRENT[k];}'
       + 'else if(k==="ShowRing"){document.getElementById("ShowRing").checked=!!CURRENT[k];}'
@@ -686,10 +613,11 @@ module.exports = {
       + 'function h(hex){return parseInt(hex.slice(1),16);}'
       + 'function tog(id){var el=document.getElementById(id);return el&&el.checked?1:0;}'
       + 'function sel(id){var el=document.getElementById(id);return el?parseInt(el.value)||0:0;}'
+      + 'function rad(name){var el=document.querySelector(\'input[name="\'+name+\'"]:checked\');return el?parseInt(el.value):0;}'
 
       + 'function save(){'
       + 'var ov=parseInt(document.querySelector(\'input[name="overlay"]:checked\').value);'
-      + 'var s={OverlayMode:ov,'
+      + 'var s={OverlayMode:ov,RingMode:rad("ringmode"),'
       + 'BackgroundColor:h(colors.BackgroundColor),OverlayColor:h(colors.OverlayColor),'
       + 'TimeColor:h(colors.TimeColor),'
       + 'LitHourColor:h(colors.LitHourColor),LitMinuteColor:h(colors.LitMinuteColor),'
