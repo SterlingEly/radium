@@ -368,52 +368,68 @@ static void draw_battery_icon(GContext *ctx, int ox, int oy, GColor col, int pct
   }
 }
 
-// BT rune: spine + diagonal X-lines top/bottom + two right chevrons + "!" at right.
+// BT rune: spine, diagonal X-lines from spine outward at top/bottom,
+// two right chevrons, and a 2px-wide "!" to the right.
 static void draw_bt_icon(GContext *ctx, int ox, int oy, GColor col, bool large) {
   graphics_context_set_stroke_color(ctx, col);
   graphics_context_set_stroke_width(ctx, 1);
   if (!large) {
-    graphics_draw_line(ctx, GPoint(ox+3, oy+0),  GPoint(ox+3, oy+10));
-    graphics_draw_pixel(ctx, GPoint(ox+1, oy+0));
+    // 11px: spine at col 3, chevron peaks at col 6
+    graphics_draw_line(ctx, GPoint(ox+3, oy+0),  GPoint(ox+3, oy+10)); // spine
+    // Upper-left diagonal: from spine top (ox+3,oy+0) outward down-left
     graphics_draw_pixel(ctx, GPoint(ox+2, oy+1));
+    graphics_draw_pixel(ctx, GPoint(ox+1, oy+2));
+    // Lower-left diagonal: from spine bottom (ox+3,oy+10) outward up-left
     graphics_draw_pixel(ctx, GPoint(ox+2, oy+9));
-    graphics_draw_pixel(ctx, GPoint(ox+1, oy+10));
+    graphics_draw_pixel(ctx, GPoint(ox+1, oy+8));
+    // Upper chevron
     graphics_draw_pixel(ctx, GPoint(ox+4, oy+1));
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+2));
-    graphics_draw_pixel(ctx, GPoint(ox+6, oy+3));
+    graphics_draw_pixel(ctx, GPoint(ox+6, oy+3)); // peak
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+4));
     graphics_draw_pixel(ctx, GPoint(ox+4, oy+5));
+    // Lower chevron
     graphics_draw_pixel(ctx, GPoint(ox+4, oy+6));
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+7));
-    graphics_draw_pixel(ctx, GPoint(ox+6, oy+8));
+    graphics_draw_pixel(ctx, GPoint(ox+6, oy+8)); // peak
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+9));
     graphics_draw_pixel(ctx, GPoint(ox+4, oy+10));
-    graphics_draw_line(ctx, GPoint(ox+8, oy+1), GPoint(ox+8, oy+7));
-    graphics_draw_pixel(ctx, GPoint(ox+8, oy+9));
+    // Exclamation: 2px wide, 1px gap from BT body
+    graphics_draw_line(ctx, GPoint(ox+9,  oy+1), GPoint(ox+9,  oy+7));
+    graphics_draw_line(ctx, GPoint(ox+10, oy+1), GPoint(ox+10, oy+7));
+    graphics_draw_pixel(ctx, GPoint(ox+9,  oy+9));
+    graphics_draw_pixel(ctx, GPoint(ox+10, oy+9));
   } else {
-    graphics_draw_line(ctx, GPoint(ox+4, oy+0),  GPoint(ox+4, oy+13));
-    graphics_draw_pixel(ctx, GPoint(ox+1, oy+0));
-    graphics_draw_pixel(ctx, GPoint(ox+2, oy+1));
-    graphics_draw_pixel(ctx, GPoint(ox+3, oy+2));
-    graphics_draw_pixel(ctx, GPoint(ox+3, oy+11));
-    graphics_draw_pixel(ctx, GPoint(ox+2, oy+12));
-    graphics_draw_pixel(ctx, GPoint(ox+1, oy+13));
+    // 14px: spine at col 4, chevron peaks at col 8
+    graphics_draw_line(ctx, GPoint(ox+4, oy+0),  GPoint(ox+4, oy+13)); // spine
+    // Upper-left diagonal: from spine top (ox+4,oy+0) outward down-left
+    graphics_draw_pixel(ctx, GPoint(ox+3, oy+1));
+    graphics_draw_pixel(ctx, GPoint(ox+2, oy+2));
+    graphics_draw_pixel(ctx, GPoint(ox+1, oy+3));
+    // Lower-left diagonal: from spine bottom (ox+4,oy+13) outward up-left
+    graphics_draw_pixel(ctx, GPoint(ox+3, oy+12));
+    graphics_draw_pixel(ctx, GPoint(ox+2, oy+11));
+    graphics_draw_pixel(ctx, GPoint(ox+1, oy+10));
+    // Upper chevron
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+1));
     graphics_draw_pixel(ctx, GPoint(ox+6, oy+2));
     graphics_draw_pixel(ctx, GPoint(ox+7, oy+3));
-    graphics_draw_pixel(ctx, GPoint(ox+8, oy+4));
+    graphics_draw_pixel(ctx, GPoint(ox+8, oy+4)); // peak
     graphics_draw_pixel(ctx, GPoint(ox+7, oy+5));
     graphics_draw_pixel(ctx, GPoint(ox+6, oy+6));
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+7));
+    // Lower chevron
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+8));
     graphics_draw_pixel(ctx, GPoint(ox+6, oy+9));
     graphics_draw_pixel(ctx, GPoint(ox+7, oy+10));
-    graphics_draw_pixel(ctx, GPoint(ox+8, oy+11));
+    graphics_draw_pixel(ctx, GPoint(ox+8, oy+11)); // peak
     graphics_draw_pixel(ctx, GPoint(ox+7, oy+12));
     graphics_draw_pixel(ctx, GPoint(ox+6, oy+13));
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+14));
-    graphics_draw_line(ctx, GPoint(ox+10, oy+1),  GPoint(ox+10, oy+9));
-    graphics_draw_line(ctx, GPoint(ox+10, oy+11), GPoint(ox+11, oy+11));
+    // Exclamation: 2px wide, 1px gap from BT body
+    graphics_draw_line(ctx, GPoint(ox+11, oy+1),  GPoint(ox+11, oy+9));
+    graphics_draw_line(ctx, GPoint(ox+12, oy+1),  GPoint(ox+12, oy+9));
+    graphics_draw_line(ctx, GPoint(ox+11, oy+11), GPoint(ox+12, oy+11));
   }
 }
 
@@ -619,8 +635,9 @@ static void draw_info_line(GContext *ctx, int field, int y, int w, int cx,
   } else if (field == FIELD_BATTERY) {
     DRAW_ICON_TEXT(draw_battery_icon(ctx, icon_x, iy, col, s_battery, large), s_battery_buffer);
   } else if (field == FIELD_BT) {
-    // Blank when connected; BT rune + "!" (built into draw_bt_icon) when disconnected.
-    // Center on full glyph width: small ~10px, large ~12px.
+    // Blank when connected; BT rune + "!" when disconnected.
+    // draw_bt_icon includes the "!" -- center on full glyph width.
+    // Small: glyph ~11px wide (to col 10), large: ~13px wide (to col 12).
     if (!s_bt_connected) {
       int bx = cx - (large ? 6 : 5);
       draw_bt_icon(ctx, bx, iy, col, large);
@@ -1026,16 +1043,23 @@ static void draw_layer(Layer *layer, GContext *ctx) {
   if (show_ring) {
     int right_pct, left_pct;
     if (s_settings.RingMode == RING_SOLAR && prv_solar_valid()) {
+      // Solar mode:
+      //   Right arc (day):   100% at sunrise, drains to 0% at sunset
+      //   Left arc (night):  100% at sunset,  drains to 0% at sunrise
+      // Both arcs are full at their transition point and drain together.
       time_t now_t = time(NULL);
       if (now_t >= s_sunrise && now_t < s_sunset) {
+        // Daytime
         int day_len = (int)(s_sunset - s_sunrise);
         right_pct = (day_len > 0) ? (int)((s_sunset - now_t) * 100 / day_len) : 0;
         left_pct  = 100;
       } else {
+        // Nighttime
         time_t prev_sunset  = (now_t < s_sunrise) ? (s_sunset - 86400) : s_sunset;
         time_t next_sunrise = (now_t < s_sunrise) ? s_sunrise           : s_sunrise_tomorrow;
         int night_len = (int)(next_sunrise - prev_sunset);
-        left_pct  = (night_len > 0) ? (int)((now_t - prev_sunset) * 100 / night_len) : 0;
+        // Count DOWN: 100% at sunset, 0% at sunrise (parallels the day arc)
+        left_pct  = (night_len > 0) ? (int)((next_sunrise - now_t) * 100 / night_len) : 0;
         right_pct = 0;
       }
       if (left_pct  < 0)   left_pct  = 0;
@@ -1061,15 +1085,18 @@ static void draw_layer(Layer *layer, GContext *ctx) {
                            DEG_TO_TRIGANGLE(183), DEG_TO_TRIGANGLE(357));
       if (right_pct > 0) {
         graphics_context_set_fill_color(ctx, col_batt);
+        // Right arc: anchor at 177 (near 6 o'clock), drains CW toward 12
         graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, RING_THICK,
                              DEG_TO_TRIGANGLE(177 - 174 * right_pct / 100),
                              DEG_TO_TRIGANGLE(177));
       }
       if (left_pct > 0) {
         graphics_context_set_fill_color(ctx, col_step);
+        // Left arc: anchor at 357 (near 6 o'clock), drains CCW toward 12
+        // Mirrored behavior: both arcs drain away from 6 o'clock toward 12
         graphics_fill_radial(ctx, bounds, GOvalScaleModeFitCircle, RING_THICK,
-                             DEG_TO_TRIGANGLE(183),
-                             DEG_TO_TRIGANGLE(183 + 174 * left_pct / 100));
+                             DEG_TO_TRIGANGLE(357 - 174 * left_pct / 100),
+                             DEG_TO_TRIGANGLE(357));
       }
     } else {
       int t      = RING_THICK;
@@ -1083,6 +1110,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       graphics_fill_rect(ctx, GRect(0,   0,   t, h), 0, GCornerNone);
       graphics_fill_rect(ctx, GRect(w-t, 0,   t, h), 0, GCornerNone);
 
+      // Right half (battery/day): origin at bottom-center-right, fills CW toward 12
       graphics_context_set_fill_color(ctx, col_dbatt);
       graphics_fill_rect(ctx, GRect(cx+gap, 0,   half_w, t), 0, GCornerNone);
       graphics_fill_rect(ctx, GRect(w-t,    0,   t,      h), 0, GCornerNone);
@@ -1107,6 +1135,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
         }
       }
 
+      // Left half (steps/night): origin at bottom-center-left, fills CCW toward 12
       graphics_context_set_fill_color(ctx, col_dstep);
       graphics_fill_rect(ctx, GRect(0,   0,   half_w, t), 0, GCornerNone);
       graphics_fill_rect(ctx, GRect(0,   0,   t,      h), 0, GCornerNone);
