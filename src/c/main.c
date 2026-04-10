@@ -193,15 +193,26 @@ static void prv_save_solar(void) {
 static void prv_load_solar(void) {
   SolarCache c = { 0, 0, 0 };
   persist_read_data(SOLAR_KEY, &c, sizeof(c));
-  if (c.sunrise_tomorrow > 0 && time(NULL) < c.sunrise_tomorrow + 36 * 3600) {
+  // Always restore cached data -- stale data is still useful for display.
+  // prv_solar_valid() gates fresh-data requests; prv_solar_present() gates display.
+  if (c.sunrise_tomorrow > 0) {
     s_sunrise          = c.sunrise;
     s_sunset           = c.sunset;
     s_sunrise_tomorrow = c.sunrise_tomorrow;
   }
 }
 
+// True if solar data is fresh (< 36h since tomorrow's sunrise).
+// Used to decide whether to request a fresh fetch from the phone.
 static bool prv_solar_valid(void) {
   return s_sunrise_tomorrow > 0 && time(NULL) < s_sunrise_tomorrow + 36 * 3600;
+}
+
+// True if any solar data is cached, even if stale.
+// Used for ring and info line display -- show plausible old data rather than
+// going dark. Sunrise times drift only ~1min/day so a missed night is negligible.
+static bool prv_solar_present(void) {
+  return s_sunrise_tomorrow > 0;
 }
 
 static const char *get_day_name(int wday) {
@@ -1004,7 +1015,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
 
   if (show_ring) {
     int right_pct, left_pct;
-    if (s_settings.RingMode == RING_SOLAR && prv_solar_valid()) {
+    if (s_settings.RingMode == RING_SOLAR && prv_solar_present()) {
       time_t now_t = time(NULL);
       if (now_t >= s_sunrise && now_t < s_sunset) {
         int day_len = (int)(s_sunset - s_sunrise);
@@ -1022,6 +1033,7 @@ static void draw_layer(Layer *layer, GContext *ctx) {
       if (right_pct < 0)   right_pct = 0;
       if (right_pct > 100) right_pct = 100;
     } else if (s_settings.RingMode == RING_SOLAR) {
+      // No solar data at all -- show dim tracks only
       right_pct = 0;
       left_pct  = 0;
     } else {
