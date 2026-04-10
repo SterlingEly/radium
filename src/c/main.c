@@ -361,9 +361,9 @@ static void draw_bt_icon(GContext *ctx, int ox, int oy, GColor col, bool large) 
   if (!large) {
     // 11px tall (rows 0-10): spine at col 3, chevron peaks at col 6
     graphics_draw_line(ctx, GPoint(ox+3, oy+0),  GPoint(ox+3, oy+10)); // spine
-    // Upper-left diagonal: crosses spine at row 3 (1/3 height), extends up-left
-    graphics_draw_pixel(ctx, GPoint(ox+2, oy+3));
-    graphics_draw_pixel(ctx, GPoint(ox+1, oy+2));
+    // Upper-left diagonal: crosses spine at row 4 (closer to 1/3 height), extends up-left
+    graphics_draw_pixel(ctx, GPoint(ox+2, oy+4));
+    graphics_draw_pixel(ctx, GPoint(ox+1, oy+3));
     // Lower-left diagonal: crosses spine at row 7 (2/3 height), extends down-left
     graphics_draw_pixel(ctx, GPoint(ox+2, oy+7));
     graphics_draw_pixel(ctx, GPoint(ox+1, oy+8));
@@ -379,10 +379,13 @@ static void draw_bt_icon(GContext *ctx, int ox, int oy, GColor col, bool large) 
     graphics_draw_pixel(ctx, GPoint(ox+6, oy+8)); // peak
     graphics_draw_pixel(ctx, GPoint(ox+5, oy+9));
     graphics_draw_pixel(ctx, GPoint(ox+4, oy+10));
-    // Exclamation: 2px wide stem, 1px gap, 2x2 dot
+    // Exclamation: 2px wide stem, 1px gap, 2x2 dot (explicit pixels for e-paper reliability)
     graphics_draw_line(ctx, GPoint(ox+9,  oy+1), GPoint(ox+9,  oy+6));
     graphics_draw_line(ctx, GPoint(ox+10, oy+1), GPoint(ox+10, oy+6));
-    graphics_fill_rect(ctx, GRect(ox+9, oy+8, 2, 2), 0, GCornerNone);
+    graphics_draw_pixel(ctx, GPoint(ox+9,  oy+8));
+    graphics_draw_pixel(ctx, GPoint(ox+10, oy+8));
+    graphics_draw_pixel(ctx, GPoint(ox+9,  oy+9));
+    graphics_draw_pixel(ctx, GPoint(ox+10, oy+9));
   } else {
     // 14px tall (rows 0-13): spine at col 4, chevron peaks at col 8
     graphics_draw_line(ctx, GPoint(ox+4, oy+0),  GPoint(ox+4, oy+13)); // spine
