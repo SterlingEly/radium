@@ -9,32 +9,30 @@ Radial bar graph watchface. Hours and minutes as arcs, battery and steps on the 
 ## Full Description
 
 A radial bar graph watchface.
-Time and energy flowing around your wrist — hours and minutes as arcs, with battery and steps on the outer ring.
+Time and energy flowing around your wrist — hours and minutes as arcs, with battery & steps or sunrise & sunset on the outer ring.
 
-The left half of the face fills with hour blocks, one per hour, sweeping clockwise from the bottom. The right half fills with minute ticks: 60 individual marks in groups of five, lighting up as each minute passes. The outer ring tracks step count toward your daily goal on the left side and battery level on the right.
+The left half of the face fills with hour blocks, sweeping clockwise from the bottom. The right half fills with minute ticks: 60 individual marks in groups of five, lighting up clockwise from the top. The outer ring tracks step count toward your daily goal on the left side and battery level on the right — or switch to Solar Ring mode, where the right arc shows daylight remaining and the left arc counts down to sunrise.
 
-In the center, an optional overlay shows the time and up to four configurable info lines — mix and match day, date, weather, steps, distance, active calories, battery %, Bluetooth status, heart rate, and more however you like. Shake to dismiss it and see the full radial display: a pure starburst of glowing geometry. Shake again to bring it back. (Or set the overlay to always-on or always-off in settings.)
+In the center, an optional overlay shows the time and up to four configurable information lines — mix and match day, date, weather, steps, distance, active calories, battery %, Bluetooth status, sunrise/sunset times, and more however you like. Shake to dismiss it and see the full radial display: a pure starburst of glowing geometry. Shake again to bring it back. (Or set the overlay to always-on or always-off in settings.)
 
 Radium 2 is a complete rebuild of the original Radium watchface, designed for Pebble Time Round in 2015 and first published in 2016. Rebuilt for all Pebble platforms with 40 color presets and full per-element color customization.
 
 ---
-FEATURES
+FEATURES:
 - Radial bar graph display — hours on the left, minutes on the right
 - 24h mode: each hour slot splits into two half-segments
 - Optional outer ring: step count (left half) and battery level (right half), or Solar Ring mode (daylight remaining / time until sunrise)
-- Four configurable info lines: day, date, weather, steps, distance, calories, battery %, Bluetooth, heart rate, sunrise, sunset, daylight duration, or none
+- Four configurable info lines: day, date, weather, steps, distance, calories, battery %, Bluetooth status, heart rate, sunrise, sunset, daylight duration, or none
 - Live weather from Open-Meteo — no account or API key required
-- Solar Ring mode: outer ring tracks the sun — daylight remaining on the right, time until sunrise on the left
-- Charging indicator: battery icon swaps to a lightning bolt when on the charger
 - Bluetooth alert: BT rune appears and watch vibrates when phone connection is lost
-- Heart rate: live BPM on Pebble Time, Time 2, Pebble 2, and Pebble 2 Duo
+- Charging indicator: battery icon swaps to a lightning bolt when on the charger
 - Full per-element color customization: 17 independent color slots
 - 40 color presets in five rows: Dark, Dark+, Light, Color, Special
 - B&W invert mode for Pebble Classic, Pebble 2, and Pebble 2 Duo
 - Shake to toggle info overlay on/off (or set always-on / always-off)
 - Art mode: set overlay to Always Off for a pure full-face starburst
 - 1-minute overlay mode: Art Mode by default, one shake shows info for 60 seconds
-- Two info overlay sizes: Small and Large (Large default on Pebble Time 2 and Round 2)
+- Two info overlay sizes for new Pebbles: Small and Large (Large default on Pebble Time 2 and Round 2)
 
 PLATFORMS:
 Pebble Classic/Steel · Pebble Time/Steel · Pebble Time Round · Pebble 2 · Pebble Time 2 · Pebble 2 Duo · Pebble Round 2
